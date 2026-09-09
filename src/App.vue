@@ -1,7 +1,16 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import LoginView from './components/LogIn.vue'
+
+interface LoginPayload {
+  email: string
+  password: string
+}
+
+function handleLoginSuccess(payload: LoginPayload) {
+  console.log('Login exitoso:', payload)
+}
 </script>
 
 <template>
-  <HelloWorld />
+  <LoginView @login-success="handleLoginSuccess" />
 </template>
