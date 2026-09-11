@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router' // 1. Importamos useRouter
 
 interface LoginForm {
   email: string
@@ -8,12 +9,18 @@ interface LoginForm {
 
 interface LoginPayload {
   email: string
-  password: string
 }
 
 const emit = defineEmits<{
   (e: 'login-success', payload: LoginPayload): void
 }>()
+
+// 2. Inicializamos el router para poder cambiar de pantalla
+const router = useRouter()
+
+// --- CREDENCIALES DE PRUEBA ---
+const MOCK_USER = 'administrador1@gmail.com'
+const MOCK_PASS = 'Admin123'
 
 const form = reactive<LoginForm>({
   email: '',
@@ -24,6 +31,7 @@ const errors = reactive<Partial<Record<keyof LoginForm, string>>>({})
 const showPassword = ref(false)
 const isLoading = ref(false)
 const serverError = ref('')
+const successMessage = ref('')
 
 function validate(): boolean {
   errors.email = ''
@@ -41,9 +49,6 @@ function validate(): boolean {
   if (!form.password) {
     errors.password = 'La contraseña es obligatoria'
     valid = false
-  } else if (form.password.length < 6) {
-    errors.password = 'Debe tener al menos 6 caracteres'
-    valid = false
   }
 
   return valid
@@ -51,22 +56,30 @@ function validate(): boolean {
 
 async function handleSubmit(): Promise<void> {
   serverError.value = ''
+  successMessage.value = ''
 
   if (!validate()) return
 
   isLoading.value = true
+
   try {
-    // TODO: reemplazar por la llamada real a tu API/backend
-    // const res = await fetch('/api/login', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(form),
-    // })
-    // if (!res.ok) throw new Error('Credenciales incorrectas')
+    // Simulación de retardo de red (600ms)
+    await new Promise((resolve) => setTimeout(resolve, 600))
 
-    await new Promise((resolve) => setTimeout(resolve, 800)) // simulación
+    // Validación individual para errores específicos
+    if (form.email.trim() !== MOCK_USER) {
+      throw new Error('El correo electrónico es incorrecto')
+    } else if (form.password !== MOCK_PASS) {
+      throw new Error('La contraseña es incorrecta')
+    }
 
-    emit('login-success', { email: form.email, password: form.password })
+    // Si ambos coinciden
+    successMessage.value = 'usuario correcto'
+    emit('login-success', { email: form.email })
+    // 3. Redirigimos al usuario a la ruta /admin tras mostrar el mensaje de éxito
+    setTimeout(() => {
+      router.push('/admin')
+    }, 600)
   } catch (err) {
     serverError.value =
       err instanceof Error ? err.message : 'Ocurrió un error al iniciar sesión'
@@ -81,14 +94,13 @@ async function handleSubmit(): Promise<void> {
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
     <div class="blob blob-3"></div>
-    <div class="pattern-dots"></div>
-    <div class="pattern-lines"></div>
 
     <form class="login-card" novalidate @submit.prevent="handleSubmit">
       <div class="login-form-side">
         <h1 class="login-title">Log In de Usuarios</h1>
         <p class="login-subtitle">Ingrese sus datos</p>
 
+        <!-- Campo Email -->
         <div class="field">
           <label for="email">Email</label>
           <input
@@ -102,6 +114,7 @@ async function handleSubmit(): Promise<void> {
           <span v-if="errors.email" class="error-text">{{ errors.email }}</span>
         </div>
 
+        <!-- Campo Contraseña -->
         <div class="field">
           <label for="password">Contraseña</label>
           <div class="password-wrapper">
@@ -110,7 +123,7 @@ async function handleSubmit(): Promise<void> {
               v-model="form.password"
               :type="showPassword ? 'text' : 'password'"
               autocomplete="current-password"
-              placeholder="••••••••"
+              placeholder="Escribe tu contraseña"
               :class="{ invalid: errors.password }"
             />
             <button
@@ -125,7 +138,11 @@ async function handleSubmit(): Promise<void> {
           <span v-if="errors.password" class="error-text">{{ errors.password }}</span>
         </div>
 
+        <!-- Mensajes de error específicos -->
         <p v-if="serverError" class="server-error">{{ serverError }}</p>
+
+        <!-- Mensaje de éxito -->
+        <p v-if="successMessage" class="success-message">{{ successMessage }}</p>
 
         <button type="submit" class="submit-btn" :disabled="isLoading">
           {{ isLoading ? 'Ingresando...' : 'Login' }}
@@ -136,8 +153,6 @@ async function handleSubmit(): Promise<void> {
         <div class="side-blob side-blob-1"></div>
         <div class="side-blob side-blob-2"></div>
         <div class="side-blob side-blob-3"></div>
-        <div class="side-dots"></div>
-
       </div>
     </form>
   </section>
@@ -157,8 +172,6 @@ async function handleSubmit(): Promise<void> {
   isolation: isolate;
 }
 
-
-/* --- Tarjeta --- */
 .login-card {
   position: relative;
   z-index: 1;
@@ -183,7 +196,6 @@ async function handleSubmit(): Promise<void> {
   box-sizing: border-box;
 }
 
-/* --- Lado de la imagen con blobs --- */
 .login-image-side {
   position: relative;
   flex: 1 1 50%;
@@ -229,30 +241,6 @@ async function handleSubmit(): Promise<void> {
   border-radius: 55% 45% 60% 40% / 40% 55% 45% 60%;
 }
 
-.side-content {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  text-align: center;
-  padding: 0 24px;
-}
-
-.side-icon {
-  font-size: 46px;
-}
-
-.side-text {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: #ffffff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
 .login-title {
   margin: 0 0 4px;
   font-size: 26px;
@@ -285,6 +273,7 @@ async function handleSubmit(): Promise<void> {
   margin-bottom: 6px;
 }
 
+/* --- ESTILOS DE LOS CAMPOS DE TEXTO --- */
 .field input[type='email'],
 .field input[type='password'],
 .field input[type='text'] {
@@ -293,15 +282,27 @@ async function handleSubmit(): Promise<void> {
   padding: 6px 2px 8px;
   border: none;
   border-bottom: 1.5px solid #4D6787;
-  background: transparent;
-  color: #1a1a1a;
+  background: transparent !important;
+  color: #1a1a1a !important;
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.2s;
 }
 
+/* Elimina el fondo gris o negro que aplica el navegador al autocompletar */
+.field input:-webkit-autofill,
+.field input:-webkit-autofill:hover, 
+.field input:-webkit-autofill:focus, 
+.field input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+  -webkit-text-fill-color: #1a1a1a !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 .field input:focus {
   border-bottom-color: #D46D25;
+  background: transparent !important;
+  outline: none;
 }
 
 .field input.invalid {
@@ -311,7 +312,7 @@ async function handleSubmit(): Promise<void> {
 .error-text {
   margin-top: 6px;
   font-size: 13px;
-  color: #689D4B;
+  color: #D46D25;
 }
 
 .password-wrapper {
@@ -324,36 +325,54 @@ async function handleSubmit(): Promise<void> {
   padding-right: 60px;
 }
 
+/* Botón Ver / Ocultar sin alteración de estilos */
 .toggle-password {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #4D6787;
+  background: none !important;
+  border: none !important;
+  color: #4D6787 !important;
   font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   padding: 4px 6px;
+  outline: none !important;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.options-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 4px 0 22px;
-  font-size: 12.5px;
-  color: #4a4a4a;
+.toggle-password:focus,
+.toggle-password:active {
+  color: #4D6787 !important;
+  outline: none !important;
+  background: none !important;
 }
 
 .server-error {
-  background: rgba(229, 72, 77, 0.1);
-  border: 1px solid rgba(229, 72, 77, 0.4);
-  color: #4D6787;
+  background: rgba(212, 109, 37, 0.12);
+  border: 1px solid #D46D25;
+  color: #b05111;
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 14px;
+  font-weight: 600;
   margin: 0 0 18px;
+  text-align: center;
+}
+
+.success-message {
+  background: rgba(104, 157, 75, 0.15);
+  border: 1px solid #689D4B;
+  color: #3b6624;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 18px;
+  text-align: center;
+  text-transform: lowercase;
 }
 
 .submit-btn {
@@ -380,17 +399,6 @@ async function handleSubmit(): Promise<void> {
 .submit-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-
-.signup-text a {
-  color: #4D6787;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.signup-text a:hover {
-  text-decoration: underline;
 }
 
 @media (max-width: 720px) {
