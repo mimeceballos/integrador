@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router' // 1. Importamos useRouter
+import { useRouter } from 'vue-router'
 
 interface LoginForm {
   email: string
@@ -11,16 +11,60 @@ interface LoginPayload {
   email: string
 }
 
+// 1 = Desactivo/Oculto, 2 = Lectura, 3 = Escritura
+export type PermissionCode = 1 | 2 | 3
+
+export interface UserProfile {
+  email: string
+  name: string
+  roleName: string
+  permissions: {
+    sistemas: PermissionCode
+    usuarios: PermissionCode
+    roles: PermissionCode
+    historias: PermissionCode
+  }
+}
+
 const emit = defineEmits<{
   (e: 'login-success', payload: LoginPayload): void
 }>()
 
-// 2. Inicializamos el router para poder cambiar de pantalla
 const router = useRouter()
 
-// --- CREDENCIALES DE PRUEBA ---
-const MOCK_USER = 'administrador1@gmail.com'
-const MOCK_PASS = 'Admin123'
+// --- MINI BASE ---
+const MOCK_USERS: Record<string, { pass: string; profile: UserProfile }> = {
+  // Usuario 1: Todos los permisos (3)
+  'administrador1@gmail.com': {
+    pass: 'Admin123',
+    profile: {
+      email: 'administrador1@gmail.com',
+      name: 'Alejandro Góngora',
+      roleName: 'Administrador',
+      permissions: { sistemas: 3, usuarios: 3, roles: 3, historias: 3 }
+    }
+  },
+  // Usuario 2: Permisos de Escritura, Lectura y Desactivado
+  'usr2@gmail.com': {
+    pass: 'usr123',
+    profile: {
+      email: 'usr2@gmail.com',
+      name: 'Juan Perez',
+      roleName: 'Usuario del Sistema',
+      permissions: { sistemas: 3, usuarios: 2, roles: 1, historias: 2 }
+    }
+  },
+  // Usuario 3: Solo Lectura general (2) o Desactivados (1)
+  'usr3@gmail.com': {
+    pass: 'usr123',
+    profile: {
+      email: 'usr3@gmail.com',
+      name: 'María Perez',
+      roleName: 'Externo',
+      permissions: { sistemas: 2, usuarios: 2, roles: 1, historias: 1 }
+    }
+  }
+}
 
 const form = reactive<LoginForm>({
   email: '',
@@ -63,20 +107,21 @@ async function handleSubmit(): Promise<void> {
   isLoading.value = true
 
   try {
-    // Simulación de retardo de red (600ms)
     await new Promise((resolve) => setTimeout(resolve, 600))
 
-    // Validación individual para errores específicos
-    if (form.email.trim() !== MOCK_USER) {
+    const account = MOCK_USERS[form.email.trim()]
+
+    if (!account) {
       throw new Error('El correo electrónico es incorrecto')
-    } else if (form.password !== MOCK_PASS) {
+    } else if (account.pass !== form.password) {
       throw new Error('La contraseña es incorrecta')
     }
 
-    // Si ambos coinciden
+    localStorage.setItem('auth_user', JSON.stringify(account.profile))
+
     successMessage.value = 'usuario correcto'
     emit('login-success', { email: form.email })
-    // 3. Redirigimos al usuario a la ruta /admin tras mostrar el mensaje de éxito
+
     setTimeout(() => {
       router.push('/admin')
     }, 600)
@@ -273,7 +318,6 @@ async function handleSubmit(): Promise<void> {
   margin-bottom: 6px;
 }
 
-/* --- ESTILOS DE LOS CAMPOS DE TEXTO --- */
 .field input[type='email'],
 .field input[type='password'],
 .field input[type='text'] {
@@ -289,7 +333,6 @@ async function handleSubmit(): Promise<void> {
   transition: border-color 0.2s;
 }
 
-/* Elimina el fondo gris o negro que aplica el navegador al autocompletar */
 .field input:-webkit-autofill,
 .field input:-webkit-autofill:hover, 
 .field input:-webkit-autofill:focus, 
@@ -325,7 +368,6 @@ async function handleSubmit(): Promise<void> {
   padding-right: 60px;
 }
 
-/* Botón Ver / Ocultar sin alteración de estilos */
 .toggle-password {
   position: absolute;
   right: 0;
