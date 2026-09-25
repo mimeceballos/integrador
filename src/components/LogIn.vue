@@ -161,7 +161,7 @@ function fillCredentials(email: string): void {
     
     <form class="login-card" novalidate @submit.prevent="handleSubmit">
       <div class="login-form-side">
-        <h1 class="login-title">Log In de Usuarios</h1>
+        <h1 class="login-title">Login de Usuarios</h1>
         <p class="login-subtitle">Ingrese sus datos</p>
 
         <div class="quick-login">
