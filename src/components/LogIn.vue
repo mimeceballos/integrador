@@ -488,7 +488,8 @@ function fillCredentials(email: string): void {
   border-radius: 999px;
   padding: 13px;
   cursor: pointer;
-  box-shadow: 0 0px 20px -6px rgb(255, 230, 230);
+  box-shadow: 0 0px 20px -6px rgb(255, 230, 230)
+  ;
   transition: opacity 0.2s, transform 0.15s;
 }
 
