@@ -7,7 +7,7 @@ const route = useRoute()
 
 // 1 = Desactivo, 2 = Lectura, 3 = Escritura
 type PermissionCode = 1 | 2 | 3
-
+//datos del usuario autentificado (estructura)
 interface UserProfile {
   email: string
   name: string
@@ -19,6 +19,7 @@ interface UserProfile {
     historias: PermissionCode
   }
 }
+//abrir o cerrar el menú desplegable 
 const isUserMenuOpen = ref(false)
 
 function toggleUserMenu() {
@@ -28,8 +29,9 @@ function toggleUserMenu() {
 function closeUserMenu() {
   isUserMenuOpen.value = false
 }
+//almacena la informacion del usuario con sesion activa
 const currentUser = ref<UserProfile | null>(null)
-
+//guard autentificacion al cargar el componente
 onMounted(() => {
   const sessionData = localStorage.getItem('auth_user')
   if (sessionData) {
@@ -42,16 +44,17 @@ const activeModuleKey = computed(() => {
   const pathParts = route.path.split('/')
   return pathParts[pathParts.length - 1] || 'sistemas'
 })
-
+//Obtiene el nivel de permiso del usuario para el módulo activo
 const currentModulePermission = computed<PermissionCode>(() => {
   if (!currentUser.value) return 1
   const key = activeModuleKey.value as keyof UserProfile['permissions']
   return currentUser.value.permissions[key] ?? 1
 })
-
+//pasa el nivel de permiso a los hijos
 provide('currentPermission', currentModulePermission)
 
 //  Menú Lateral
+//Construye las opciones del menú lateral dinámicamente según permisos
 const menuItems = computed(() => {
   const perms = currentUser.value?.permissions || {
     sistemas: 1,
@@ -81,10 +84,11 @@ function handleLogout() {
       <div class="brand">
         <h2>OPCIONES</h2>
       </div>
-
+<!--menu-->
       <nav class="menu">
         <template v-for="item in menuItems" :key="item.id">
-          <!-- PERMISO 1: Desactivo -->
+          <!-- SI EL PERMISO ES 1: Desactivo, opción se oculta de la navegación -->
+          <!-- Se dibuja el botón si el nivel de permiso es diferente de 1-->
           <router-link
             v-if="item.level !== 1"
             :to="item.route"
@@ -149,7 +153,7 @@ function handleLogout() {
         </div>
 
         <hr class="divider" />
-
+<!-- Sección con desglose detallado de permisos -->
         <div class="permissions-section">
           <h5>Niveles de Permisos:</h5>
           <ul class="permissions-list">
@@ -183,7 +187,7 @@ function handleLogout() {
     </div>
   </div>
 </header>
-
+<!-- VISTA DINÁMICA DEL MÓDULO (Pasando permisos vía props) -->
       <main class="content">
         <router-view :permission="currentModulePermission" />
       </main>

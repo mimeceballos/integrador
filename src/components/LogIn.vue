@@ -1,12 +1,14 @@
 <script setup lang="ts">
+// Importación de funciones reactivas de Vue y utilidades de Vue Router
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+// Estructura para los datos recopilados en el formulario de inicio de sesión
 interface LoginForm {
   email: string
   password: string
 }
-
+// Estructura de los datos que se enviarán al emitir un evento de éxito
 interface LoginPayload {
   email: string
 }
@@ -25,7 +27,7 @@ export interface UserProfile {
     historias: PermissionCode
   }
 }
-
+// Definición de eventos que este componente puede notificar a su padre
 const emit = defineEmits<{
   (e: 'login-success', payload: LoginPayload): void
 }>()
@@ -72,11 +74,13 @@ const form = reactive<LoginForm>({
 })
 
 const errors = reactive<Partial<Record<keyof LoginForm, string>>>({})
-const showPassword = ref(false)
-const isLoading = ref(false)
-const serverError = ref('')
-const successMessage = ref('')
+// Variables de estado auxiliares
+const showPassword = ref(false) // Controla si se oculta o muestra la contraseña
+const isLoading = ref(false)    // Indica si el envío está en proceso
+const serverError = ref('')     // Almacena errores generales de autenticación
+const successMessage = ref('')  // Almacena mensajes de éxito
 
+//valida entrada de datos
 function validate(): boolean {
   errors.email = ''
   errors.password = ''
@@ -97,7 +101,7 @@ function validate(): boolean {
 
   return valid
 }
-
+//proceso inicio de sesión
 async function handleSubmit(): Promise<void> {
   serverError.value = ''
   successMessage.value = ''
@@ -108,7 +112,7 @@ async function handleSubmit(): Promise<void> {
 
   try {
     await new Promise((resolve) => setTimeout(resolve, 600))
-
+//busca el usuario en la base de datos
     const account = MOCK_USERS[form.email.trim()]
 
     if (!account) {
@@ -116,12 +120,12 @@ async function handleSubmit(): Promise<void> {
     } else if (account.pass !== form.password) {
       throw new Error('La contraseña es incorrecta')
     }
-
+//guarda el perfil en el almacenamiento local del navegador
     localStorage.setItem('auth_user', JSON.stringify(account.profile))
 
     successMessage.value = 'usuario correcto'
     emit('login-success', { email: form.email })
-
+//redirecciona al inicio ya validado
     setTimeout(() => {
       router.push('/admin')
     }, 600)
@@ -188,7 +192,7 @@ async function handleSubmit(): Promise<void> {
 
         <!-- Mensaje de éxito -->
         <p v-if="successMessage" class="success-message">{{ successMessage }}</p>
-
+<!--boton de envío -->
         <button type="submit" class="submit-btn" :disabled="isLoading">
           {{ isLoading ? 'Ingresando...' : 'Login' }}
         </button>
