@@ -1,5 +1,5 @@
 <template>
   <div>
-    <h2>Detalle del sistema</h2>
+    <h2>Formulario para insertar un sistema nuevo para registrar</h2>
   </div>
 </template>
