@@ -39,8 +39,18 @@ onMounted(() => {
   }
 })
 const activeModuleKey = computed(() => {
-  const pathParts = route.path.split('/')
-  return pathParts[pathParts.length - 1] || 'sistemas'
+  const pathParts = route.path.split('/').filter(Boolean)
+
+  // Estructura esperada:
+  // /admin/sistemas
+  // /admin/sistemas/nuevo
+  // /admin/sistemas/:id
+  // /admin/sistemas/:id/editar
+  //
+  // El módulo siempre es el segundo segmento.
+  return pathParts[0] === 'admin'
+    ? pathParts[1] || 'sistemas'
+    : 'sistemas'
 })
 
 const currentModulePermission = computed<PermissionCode>(() => {
