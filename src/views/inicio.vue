@@ -71,10 +71,10 @@ const menuItems = computed(() => {
   }
 
   return [
-    { id: 1, name: 'Sistemas', route: '/admin/sistemas', level: perms.sistemas },
-    { id: 2, name: 'Usuarios', route: '/admin/usuarios', level: perms.usuarios },
-    { id: 3, name: 'Roles', route: '/admin/roles', level: perms.roles },
-    { id: 4, name: 'Historias', route: '/admin/historias', level: perms.historias }
+    { id: 1, name: 'Sistemas', route: '/portal/sistemas', level: perms.sistemas },
+    { id: 2, name: 'Usuarios', route: '/portal/usuarios', level: perms.usuarios },
+    { id: 3, name: 'Roles', route: '/portal/roles', level: perms.roles },
+    { id: 4, name: 'Historias', route: '/portal/historias', level: perms.historias }
   ]
 })
 

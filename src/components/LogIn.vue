@@ -143,7 +143,7 @@ async function handleSubmit(): Promise<void> {
     emit('login-success', { email: form.email })
 
     setTimeout(() => {
-      router.push('/admin')
+      router.push('/portal')
     }, 600)
   } catch (err) {
     serverError.value =

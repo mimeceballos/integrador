@@ -234,7 +234,7 @@ function cancelarEliminacion() {
                 -->
 
                 <RouterLink
-                  :to="`/admin/sistemas/${sistema.id}`"
+                  :to="`/portal/sistemas/${sistema.id}`"
                   class="action-btn view-btn"
                   title="Ver detalles del sistema"
                 >
@@ -249,7 +249,7 @@ function cancelarEliminacion() {
 
                 <RouterLink
                   v-if="isAdmin"
-                  :to="`/admin/sistemas/${sistema.id}/editar`"
+                  :to="`/portal/sistemas/${sistema.id}/editar`"
                   class="action-btn edit-btn"
                   title="Editar sistema"
                 >
