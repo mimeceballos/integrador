@@ -19,6 +19,16 @@ interface UserProfile {
     historias: PermissionCode
   }
 }
+
+// Interfaz para los elementos del menú lateral
+interface MenuItem {
+  id: number
+  name: string
+  route: string
+  level: number
+  image?: string
+}
+
 const isUserMenuOpen = ref(false)
 
 function toggleUserMenu() {
@@ -28,6 +38,7 @@ function toggleUserMenu() {
 function closeUserMenu() {
   isUserMenuOpen.value = false
 }
+
 const currentUser = ref<UserProfile | null>(null)
 
 onMounted(() => {
@@ -38,16 +49,9 @@ onMounted(() => {
     router.push('/')
   }
 })
+
 const activeModuleKey = computed(() => {
   const pathParts = route.path.split('/').filter(Boolean)
-
-  // Estructura esperada:
-  // /admin/sistemas
-  // /admin/sistemas/nuevo
-  // /admin/sistemas/:id
-  // /admin/sistemas/:id/editar
-  //
-  // El módulo siempre es el segundo segmento.
   return pathParts[0] === 'admin'
     ? pathParts[1] || 'sistemas'
     : 'sistemas'
@@ -61,8 +65,13 @@ const currentModulePermission = computed<PermissionCode>(() => {
 
 provide('currentPermission', currentModulePermission)
 
-//  Menú Lateral
-const menuItems = computed(() => {
+// Función para obtener la URL dinámica de las imágenes en PNG
+const getImageUrl = (name: string) => {
+  return new URL(`../assets/img/${name}.png`, import.meta.url).href
+}
+
+// Menú Lateral (Único y correcto)
+const menuItems = computed<MenuItem[]>(() => {
   const perms = currentUser.value?.permissions || {
     sistemas: 1,
     usuarios: 1,
@@ -71,10 +80,10 @@ const menuItems = computed(() => {
   }
 
   return [
-    { id: 1, name: 'Sistemas', route: '/portal/sistemas', level: perms.sistemas },
-    { id: 2, name: 'Usuarios', route: '/portal/usuarios', level: perms.usuarios },
-    { id: 3, name: 'Roles', route: '/portal/roles', level: perms.roles },
-    { id: 4, name: 'Historias', route: '/portal/historias', level: perms.historias }
+    { id: 1, name: 'Sistemas', route: '/portal/sistemas', level: perms.sistemas, image: getImageUrl('icono_sistemas') },
+    { id: 2, name: 'Usuarios', route: '/portal/usuarios', level: perms.usuarios, image: getImageUrl('icono_usuarios') },
+    { id: 3, name: 'Roles', route: '/portal/roles', level: perms.roles, image: getImageUrl('icono_roles') },
+    { id: 4, name: 'Historias', route: '/portal/historias', level: perms.historias, image: getImageUrl('icono_historias') }
   ]
 })
 
@@ -101,6 +110,8 @@ function handleLogout() {
             class="menu-item"
             :class="{ 'is-readonly': item.level === 2 }"
           >
+            <!-- ÍCONO A LA IZQUIERDA -->
+            <img v-if="item.image" :src="item.image" :alt="item.name" class="menu-icon" />
             <span class="item-name">{{ item.name }}</span>
             <span v-if="item.level === 2" class="badge badge-read" title="Acceso sin manipulación de datos">
             </span>
@@ -116,83 +127,83 @@ function handleLogout() {
     </aside>
 
     <div class="main-wrapper">
-     <header class="top-header">
-  <div class="header-title"></div>
-  <div v-if="currentUser" class="user-menu-wrapper">
-    <button 
-      type="button" 
-      class="user-card-top" 
-      @click="toggleUserMenu"
-      :class="{ 'is-active': isUserMenuOpen }"
-    >
-      <div class="user-avatar">
-        {{ currentUser.name.charAt(0) }}
-      </div>
-      <div class="user-details">
-        <span class="user-name">{{ currentUser.name }}</span>
-        <span class="user-role">{{ currentUser.roleName }}</span>
-      </div>
-      <span class="dropdown-arrow">▾</span>
-    </button>
+      <header class="top-header">
+        <div class="header-title"></div>
+        <div v-if="currentUser" class="user-menu-wrapper">
+          <button 
+            type="button" 
+            class="user-card-top" 
+            @click="toggleUserMenu"
+            :class="{ 'is-active': isUserMenuOpen }"
+          >
+            <div class="user-avatar">
+              {{ currentUser.name.charAt(0) }}
+            </div>
+            <div class="user-details">
+              <span class="user-name">{{ currentUser.name }}</span>
+              <span class="user-role">{{ currentUser.roleName }}</span>
+            </div>
+            <span class="dropdown-arrow">▾</span>
+          </button>
 
-    <!-- MENÚ / DETALLES DEL USUARIO -->
-    <div v-if="isUserMenuOpen" class="user-dropdown-card">
-      <div class="dropdown-header">
-        <h4>Perfil de Usuario</h4>
-        <button class="close-btn" @click="closeUserMenu">✕</button>
-      </div>
+          <!-- MENÚ / DETALLES DEL USUARIO -->
+          <div v-if="isUserMenuOpen" class="user-dropdown-card">
+            <div class="dropdown-header">
+              <h4>Perfil de Usuario</h4>
+              <button class="close-btn" @click="closeUserMenu">✕</button>
+            </div>
 
-      <div class="dropdown-body">
-        <div class="info-row">
-          <span class="info-label">Nombre:</span>
-          <span class="info-value">{{ currentUser.name }}</span>
+            <div class="dropdown-body">
+              <div class="info-row">
+                <span class="info-label">Nombre:</span>
+                <span class="info-value">{{ currentUser.name }}</span>
+              </div>
+
+              <div class="info-row">
+                <span class="info-label">Correo:</span>
+                <span class="info-value">{{ currentUser.email }}</span>
+              </div>
+
+              <div class="info-row">
+                <span class="info-label">Rol:</span>
+                <span class="info-value">{{ currentUser.roleName }}</span>
+              </div>
+
+              <hr class="divider" />
+
+              <div class="permissions-section">
+                <h5>Niveles de Permisos:</h5>
+                <ul class="permissions-list">
+                  <li>
+                    <span>Sistemas:</span>
+                    <span class="perm-badge" :class="'perm-' + currentUser.permissions.sistemas">
+                      {{ currentUser.permissions.sistemas === 1 ? 'Desactivo' : currentUser.permissions.sistemas === 2 ? 'Lectura' : 'Escritura' }}
+                    </span>
+                  </li>
+                  <li>
+                    <span>Usuarios:</span>
+                    <span class="perm-badge" :class="'perm-' + currentUser.permissions.usuarios">
+                      {{ currentUser.permissions.usuarios === 1 ? 'Desactivo' : currentUser.permissions.usuarios === 2 ? 'Lectura' : 'Escritura' }}
+                    </span>
+                  </li>
+                  <li>
+                    <span>Roles:</span>
+                    <span class="perm-badge" :class="'perm-' + currentUser.permissions.roles">
+                      {{ currentUser.permissions.roles === 1 ? 'Desactivo' : currentUser.permissions.roles === 2 ? 'Lectura' : 'Escritura' }}
+                    </span>
+                  </li>
+                  <li>
+                    <span>Historias:</span>
+                    <span class="perm-badge" :class="'perm-' + currentUser.permissions.historias">
+                      {{ currentUser.permissions.historias === 1 ? 'Desactivo' : currentUser.permissions.historias === 2 ? 'Lectura' : 'Escritura' }}
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <div class="info-row">
-          <span class="info-label">Correo:</span>
-          <span class="info-value">{{ currentUser.email }}</span>
-        </div>
-
-        <div class="info-row">
-          <span class="info-label">Rol:</span>
-          <span class="info-value">{{ currentUser.roleName }}</span>
-        </div>
-
-        <hr class="divider" />
-
-        <div class="permissions-section">
-          <h5>Niveles de Permisos:</h5>
-          <ul class="permissions-list">
-            <li>
-              <span>Sistemas:</span>
-              <span class="perm-badge" :class="'perm-' + currentUser.permissions.sistemas">
-                {{ currentUser.permissions.sistemas === 1 ? 'Desactivo' : currentUser.permissions.sistemas === 2 ? 'Lectura' : 'Escritura' }}
-              </span>
-            </li>
-            <li>
-              <span>Usuarios:</span>
-              <span class="perm-badge" :class="'perm-' + currentUser.permissions.usuarios">
-                {{ currentUser.permissions.usuarios === 1 ? 'Desactivo' : currentUser.permissions.usuarios === 2 ? 'Lectura' : 'Escritura' }}
-              </span>
-            </li>
-            <li>
-              <span>Roles:</span>
-              <span class="perm-badge" :class="'perm-' + currentUser.permissions.roles">
-                {{ currentUser.permissions.roles === 1 ? 'Desactivo' : currentUser.permissions.roles === 2 ? 'Lectura' : 'Escritura' }}
-              </span>
-            </li>
-            <li>
-              <span>Historias:</span>
-              <span class="perm-badge" :class="'perm-' + currentUser.permissions.historias">
-                {{ currentUser.permissions.historias === 1 ? 'Desactivo' : currentUser.permissions.historias === 2 ? 'Lectura' : 'Escritura' }}
-              </span>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-</header>
+      </header>
 
       <main class="content">
         <router-view :permission="currentModulePermission" />
@@ -336,6 +347,7 @@ function handleLogout() {
 .perm-1 { background-color: #fee2e2; color: #991b1b; } /* Desactivo */
 .perm-2 { background-color: #fef3c7; color: #92400e; } /* Lectura */
 .perm-3 { background-color: #d1fae5; color: #065f46; } /* Escritura */
+
 .sidebar {
   width: 260px;
   background-color: #4d6787;
@@ -364,8 +376,7 @@ function handleLogout() {
 
 .menu-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  align-items: center; /* Alinea verticalmente al centro ícono, texto y badge */
   padding: 12px 16px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.12);
@@ -373,6 +384,7 @@ function handleLogout() {
   text-decoration: none;
   font-size: 14px;
   font-weight: 600;
+  gap: 12px; /* Espacio entre el ícono a la izquierda y el texto */
   transition: all 0.2s ease;
 }
 
@@ -388,6 +400,19 @@ function handleLogout() {
 
 .menu-item.is-readonly.router-link-active {
   background: #e3e8f0;
+}
+
+/* El nombre del menú toma el espacio intermedio para empujar el badge al final */
+.item-name {
+  flex-grow: 1;
+  text-align: left;
+}
+
+/* Tamaño exacto para las imágenes/íconos pequeños a la izquierda */
+.menu-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
 /* BADGES PASTEL */
@@ -446,16 +471,6 @@ function handleLogout() {
   color: #4d6787;
   font-size: 15px;
   letter-spacing: 0.5px;
-}
-
-.user-card-top {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: #fffde1;
-  padding: 6px 14px;
-  border-radius: 30px;
-  border: 1px solid #f2eab4;
 }
 
 .user-avatar {
