@@ -2,6 +2,7 @@
 // Importación de funciones reactivas de Vue y utilidades de Vue Router
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useReCaptcha } from 'vue-recaptcha-v3' // 1 - Importar el hook de reCAPTCHA
 
 // Estructura para los datos recopilados en el formulario de inicio de sesión
 interface LoginForm {
@@ -33,6 +34,9 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+
+// 2 - Se guarda la instancia completa de reCAPTCHA
+const recaptchaInstance = useReCaptcha()
 
 // --- MINI BASE ---
 const MOCK_USERS: Record<string, { pass: string; profile: UserProfile }> = {
@@ -101,7 +105,8 @@ function validate(): boolean {
 
   return valid
 }
-//proceso inicio de sesión
+
+
 async function handleSubmit(): Promise<void> {
   serverError.value = ''
   successMessage.value = ''
@@ -111,6 +116,21 @@ async function handleSubmit(): Promise<void> {
   isLoading.value = true
 
   try {
+    // 3 - Comprueba que la instancia esté lista
+    if (!recaptchaInstance) {
+      throw new Error('reCAPTCHA no está inicializado correctamente.')
+    }
+
+    // 3. Desestructura las funciones ahora que TypeScript sabe que existen
+    const { executeRecaptcha, recaptchaLoaded } = recaptchaInstance
+
+    await recaptchaLoaded()
+    const token = await executeRecaptcha('login')
+
+    if (!token) {
+      throw new Error('No se pudo verificar la seguridad de reCAPTCHA.')
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 600))
 //busca el usuario en la base de datos
     const account = MOCK_USERS[form.email.trim()]
@@ -127,7 +147,7 @@ async function handleSubmit(): Promise<void> {
     emit('login-success', { email: form.email })
 //redirecciona al inicio ya validado
     setTimeout(() => {
-      router.push('/admin')
+      router.push('/portal')
     }, 600)
   } catch (err) {
     serverError.value =
@@ -136,18 +156,61 @@ async function handleSubmit(): Promise<void> {
     isLoading.value = false
   }
 }
+
+function fillCredentials(email: string): void {
+  const account = MOCK_USERS[email]
+  if (!account) return
+  form.email = email
+  form.password = account.pass
+
+  errors.email = ''
+  errors.password = ''
+  serverError.value = ''
+  successMessage.value = ''
+}
+
 </script>
 
 <template>
+  
   <section class="login-page">
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
     <div class="blob blob-3"></div>
 
+    <div class="page-header">
+      <h2 class="page-title">Administrador de Proyectos</h2>
+    </div>
+
+    
     <form class="login-card" novalidate @submit.prevent="handleSubmit">
       <div class="login-form-side">
-        <h1 class="login-title">Log In de Usuarios</h1>
+        <h1 class="login-title">Login de Usuarios</h1>
         <p class="login-subtitle">Ingrese sus datos</p>
+
+        <div class="quick-login">
+          <button
+            type="button"
+            class="quick-login-btn"
+            @click="fillCredentials('administrador1@gmail.com')"
+          >
+          Administrador
+          </button>
+          <button
+            type="button"
+            class="quick-login-btn"
+            @click="fillCredentials('usr2@gmail.com')"
+          >
+          Usuario del Sistema
+          </button>
+          <button
+            type="button"
+            class="quick-login-btn"
+            @click="fillCredentials('usr3@gmail.com')"
+          >
+          Externo
+          </button>
+        </div>
 
         <!-- Campo Email -->
         <div class="field">
@@ -212,13 +275,29 @@ async function handleSubmit(): Promise<void> {
   position: relative;
   flex-grow: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
+  gap: 28px;
+  padding: 2px 60px 20px;
   box-sizing: border-box;
   overflow: hidden;
-  background: #F6F3CF;
+  background: #F2F2F2;
   isolation: isolate;
+}
+
+.page-header {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 50px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #000000;
 }
 
 .login-card {
@@ -251,7 +330,7 @@ async function handleSubmit(): Promise<void> {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fffde1;
+  background: #EFEFEF;
   overflow: hidden;
 }
 
@@ -265,7 +344,7 @@ async function handleSubmit(): Promise<void> {
   left: -15%;
   width: 70%;
   height: 60%;
-  background: #D9EFBD;
+  background: #EAA2E5;
   opacity: 0.9;
   border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%;
 }
@@ -275,7 +354,7 @@ async function handleSubmit(): Promise<void> {
   right: -12%;
   width: 65%;
   height: 55%;
-  background: #CFEBFF;
+  background: #5F0032;
   opacity: 0.85;
   border-radius: 60% 40% 30% 70% / 55% 65% 35% 45%;
 }
@@ -285,7 +364,7 @@ async function handleSubmit(): Promise<void> {
   left: 5%;
   width: 40%;
   height: 30%;
-  background: #FDC086;
+  background: #E8F9A2;
   opacity: 0.5;
   border-radius: 55% 45% 60% 40% / 40% 55% 45% 60%;
 }
@@ -306,7 +385,7 @@ async function handleSubmit(): Promise<void> {
   font-weight: 700;
   letter-spacing: 0.5px;
   text-align: center;
-  color: #A5AF79;
+  color: #5F0032;
 }
 
 .field {
@@ -427,13 +506,13 @@ async function handleSubmit(): Promise<void> {
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: #4D6787;
-  background: #CFEBFF;
+  color: #FFFF;
+  background: #99154E;
   border: none;
   border-radius: 999px;
   padding: 13px;
   cursor: pointer;
-  box-shadow: 0 0px 20px -6px rgb(51, 104, 160);
+  box-shadow: 0 0px 20px -6px rgb(255, 230, 230);
   transition: opacity 0.2s, transform 0.15s;
 }
 
@@ -445,6 +524,33 @@ async function handleSubmit(): Promise<void> {
 .submit-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* BOTONES NUEVOS */
+.quick-login {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.quick-login-btn {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #5F0032;
+  background: #E8F9A2;
+  border: 1.5px solid #FFFF;
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.quick-login-btn:hover {
+  background: #EAA2E5;
+  transform: translateY(-1px);
 }
 
 @media (max-width: 720px) {
