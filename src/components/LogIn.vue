@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useReCaptcha } from 'vue-recaptcha-v3' // 1 - Importar el hook de reCAPTCHA
 
 interface LoginForm {
   email: string
@@ -31,6 +32,9 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+
+// 2 - Se guarda la instancia completa de reCAPTCHA
+const recaptchaInstance = useReCaptcha()
 
 // --- MINI BASE ---
 const MOCK_USERS: Record<string, { pass: string; profile: UserProfile }> = {
@@ -98,6 +102,7 @@ function validate(): boolean {
   return valid
 }
 
+
 async function handleSubmit(): Promise<void> {
   serverError.value = ''
   successMessage.value = ''
@@ -107,6 +112,21 @@ async function handleSubmit(): Promise<void> {
   isLoading.value = true
 
   try {
+    // 3 - Comprueba que la instancia esté lista
+    if (!recaptchaInstance) {
+      throw new Error('reCAPTCHA no está inicializado correctamente.')
+    }
+
+    // 3. Desestructura las funciones ahora que TypeScript sabe que existen
+    const { executeRecaptcha, recaptchaLoaded } = recaptchaInstance
+
+    await recaptchaLoaded()
+    const token = await executeRecaptcha('login')
+
+    if (!token) {
+      throw new Error('No se pudo verificar la seguridad de reCAPTCHA.')
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 600))
 
     const account = MOCK_USERS[form.email.trim()]
@@ -123,7 +143,7 @@ async function handleSubmit(): Promise<void> {
     emit('login-success', { email: form.email })
 
     setTimeout(() => {
-      router.push('/admin')
+      router.push('/portal')
     }, 600)
   } catch (err) {
     serverError.value =

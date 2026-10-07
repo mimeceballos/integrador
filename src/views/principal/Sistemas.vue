@@ -26,7 +26,7 @@ const canWrite = computed(() => {
 
       <RouterLink
         v-if="canWrite"
-        to="/admin/sistemas/nuevo"
+        to="/portal/sistemas/nuevo"
         class="new-system-btn"
       >
         + Nuevo sistema
@@ -35,7 +35,7 @@ const canWrite = computed(() => {
 
     <nav class="module-nav">
       <RouterLink
-        to="/admin/sistemas"
+        to="/portal/sistemas"
         class="module-nav-link"
       >
         Sistemas registrados
