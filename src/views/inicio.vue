@@ -128,7 +128,9 @@ function handleLogout() {
 
     <div class="main-wrapper">
       <header class="top-header">
-        <div class="header-title"></div>
+        <div> </div>
+        <div> </div>
+        <h2 class="header-title">Administrador de Proyectos</h2>
         <div v-if="currentUser" class="user-menu-wrapper">
           <button 
             type="button" 
@@ -216,9 +218,13 @@ function handleLogout() {
 .admin-layout {
   display: flex;
   min-height: 100vh;
-  background-color: #f6f3cf;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: #F2F2F2;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+
 .user-menu-wrapper {
   position: relative;
 }
@@ -227,10 +233,10 @@ function handleLogout() {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #fffde1;
+  background: #FBEAF9;
   padding: 6px 14px;
   border-radius: 30px;
-  border: 1px solid #f2eab4;
+  border: 1px solid #F0CBEC;
   cursor: pointer;
   transition: all 0.2s ease;
   outline: none;
@@ -238,13 +244,13 @@ function handleLogout() {
 
 .user-card-top:hover,
 .user-card-top.is-active {
-  background: #f7f3be;
+  background: #F5D6F2;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .dropdown-arrow {
   font-size: 12px;
-  color: #4d6787;
+  color: #5F0032;
   margin-left: 4px;
 }
 
@@ -277,7 +283,7 @@ function handleLogout() {
 .dropdown-header h4 {
   margin: 0;
   font-size: 14px;
-  color: #4d6787;
+  color: #5F0032;
   font-weight: 700;
 }
 
@@ -315,7 +321,7 @@ function handleLogout() {
 .permissions-section h5 {
   margin: 0 0 10px;
   font-size: 12px;
-  color: #4d6787;
+  color: #5F0032;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -349,8 +355,10 @@ function handleLogout() {
 .perm-3 { background-color: #d1fae5; color: #065f46; } /* Escritura */
 
 .sidebar {
+  position: relative;
+  z-index: 1;
   width: 260px;
-  background-color: #4d6787;
+  background-color: #5F0032;
   color: #ffffff;
   display: flex;
   flex-direction: column;
@@ -363,7 +371,8 @@ function handleLogout() {
   font-size: 18px;
   font-weight: 800;
   letter-spacing: 1.5px;
-  color: #fffde1;
+  color: #E8F9A2;
+  text-transform: uppercase;
   text-align: center;
 }
 
@@ -394,12 +403,12 @@ function handleLogout() {
 }
 
 .menu-item.router-link-active {
-  background: #cfebff;
-  color: #4d6787;
+  background: #E8F9A2;
+  color: #5F0032;
 }
 
 .menu-item.is-readonly.router-link-active {
-  background: #e3e8f0;
+  background: #EAA2E5;
 }
 
 /* El nombre del menú toma el espacio intermedio para empujar el badge al final */
@@ -435,28 +444,43 @@ function handleLogout() {
 
 .logout-btn {
   margin-top: auto;
-  padding: 12px;
-  background: #fdc086;
-  color: #4a2810;
+  padding: 13px;
+  background: #99154E;
+  color: #ffffff;
   border: none;
-  border-radius: 10px;
+  border-radius: 999px;
+  font-size: 14px;
   font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: opacity 0.2s, transform 0.15s;
 }
 
 .logout-btn:hover {
-  background: #fdb068;
+  opacity: 0.92;
+  transform: translateY(-1px);
 }
 
 /* CONTENEDOR DERECHO */
 .main-wrapper {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
+.header-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #000000;
+}
+
 .top-header {
+  position: relative;
   height: 70px;
   background: #ffffff;
   display: flex;
@@ -468,7 +492,7 @@ function handleLogout() {
 
 .current-view-name {
   font-weight: 700;
-  color: #4d6787;
+  color: #5F0032;
   font-size: 15px;
   letter-spacing: 0.5px;
 }
@@ -477,8 +501,8 @@ function handleLogout() {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #cfebff;
-  color: #4d6787;
+  background: #F1C0EC;
+  color: #5F0032;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -499,7 +523,7 @@ function handleLogout() {
 
 .user-role {
   font-size: 11px;
-  color: #a5af79;
+  color: #99154E;
   font-weight: 600;
 }
 

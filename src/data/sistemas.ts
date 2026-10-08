@@ -25,6 +25,13 @@ export interface Sistema {
   estado: string
   responsable: string
 
+  /** Scrum, Kanban, Cascada, etc. */
+  metodologia: string
+
+  /** Fechas del proyecto, formato DD/MM/AAAA */
+  fechaInicio: string
+  fechaFin: string
+
   departamento: string
   objetivo: string
   presupuesto: number
@@ -68,6 +75,12 @@ export const sistemas = ref<Sistema[]>([
     estado: 'Activo',
 
     responsable: 'Laura Méndez',
+
+    metodologia: 'Scrum',
+
+    fechaInicio: '15/08/2026',
+
+    fechaFin: '15/12/2026',
 
     departamento: 'Recursos Humanos',
 
@@ -134,6 +147,12 @@ export const sistemas = ref<Sistema[]>([
     estado: 'En desarrollo',
 
     responsable: 'Carlos Ramírez',
+
+    metodologia: 'Kanban',
+
+    fechaInicio: '01/09/2026',
+
+    fechaFin: '30/11/2026',
 
     departamento: 'Almacén',
 
@@ -207,6 +226,12 @@ export const sistemas = ref<Sistema[]>([
 
     responsable: 'Sofía Hernández',
 
+    metodologia: 'Cascada',
+
+    fechaInicio: '10/07/2026',
+
+    fechaFin: '10/10/2026',
+
     departamento: 'Ventas',
 
     objetivo:
@@ -273,6 +298,12 @@ export const sistemas = ref<Sistema[]>([
 
     responsable: 'Miguel Torres',
 
+    metodologia: 'Scrum',
+
+    fechaInicio: '05/08/2026',
+
+    fechaFin: '05/01/2027',
+
     departamento: 'Atención al Cliente',
 
     objetivo:
@@ -329,6 +360,37 @@ export const sistemas = ref<Sistema[]>([
 ])
 
 /* =========================================
+ * FECHAS
+ * =========================================
+ * Internamente las fechas se guardan como
+ * texto DD/MM/AAAA. Los <input type="date">
+ * trabajan con AAAA-MM-DD, por eso estas
+ * funciones convierten entre ambos formatos.
+ */
+
+// Fecha de hoy en formato DD/MM/AAAA
+export function fechaHoy(): string {
+  const hoy = new Date()
+  const dd = String(hoy.getDate()).padStart(2, '0')
+  const mm = String(hoy.getMonth() + 1).padStart(2, '0')
+  return `${dd}/${mm}/${hoy.getFullYear()}`
+}
+
+// 'AAAA-MM-DD' -> 'DD/MM/AAAA'
+export function isoAFecha(iso: string): string {
+  if (!iso) return ''
+  const [y, m, d] = iso.split('-')
+  return `${d}/${m}/${y}`
+}
+
+// 'DD/MM/AAAA' -> 'AAAA-MM-DD'
+export function fechaAIso(fecha: string): string {
+  if (!fecha) return ''
+  const [d, m, y] = fecha.split('/')
+  return `${y}-${m}-${d}`
+}
+
+/* =========================================
  * GENERAR NUEVO ID
  * ========================================= */
 
@@ -347,12 +409,16 @@ function generarNuevoId(): number {
  * ========================================= */
 
 export function agregarSistema(
-  datos: Omit<Sistema, 'id'>
+  datos: Omit<Sistema, 'id' | 'fechaCreacion' | 'fechaActualizacion'>
 ): Sistema {
 
+  // Las fechas de creación y actualización
+  // se asignan automáticamente con la fecha de hoy.
   const nuevoSistema: Sistema = {
     id: generarNuevoId(),
-    ...datos
+    ...datos,
+    fechaCreacion: fechaHoy(),
+    fechaActualizacion: fechaHoy()
   }
 
   sistemas.value.push(nuevoSistema)
@@ -377,9 +443,12 @@ export function actualizarSistema(
     return undefined
   }
 
+  // fechaActualizacion se refresca sola en cada edición,
+  // sin importar lo que venga en "datos".
   sistemas.value[indice] = {
     ...sistemas.value[indice],
-    ...datos
+    ...datos,
+    fechaActualizacion: fechaHoy()
   }
 
   return sistemas.value[indice]

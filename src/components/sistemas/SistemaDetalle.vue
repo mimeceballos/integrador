@@ -8,26 +8,18 @@ import {
 
 const route = useRoute()
 
-/* -----------------------------------------
- * ID DEL SISTEMA
- * ----------------------------------------- */
 
+/* ID DEL SISTEMA */
 const sistemaId = computed(() => {
   return Number(route.params.id)
 })
 
-/* -----------------------------------------
- * SISTEMA SELECCIONADO
- * ----------------------------------------- */
 
+/* SISTEMA SELECCIONADO */
 /*
- * El sistema se obtiene directamente de la
- * fuente temporal compartida:
- *
+ * El sistema se obtiene directamente de la fuente temporal compartida:
  * src/data/sistemas.ts
- *
  * De esta manera:
- *
  * SistemaForm.vue
  *       ↓
  * sistemas.ts
@@ -35,7 +27,6 @@ const sistemaId = computed(() => {
  * ┌───────────────┬────────────────────┐
  * │ SistemaLista  │ SistemaDetalle     │
  * └───────────────┴────────────────────┘
- *
  * Todos trabajan sobre los mismos datos.
  */
 
@@ -45,10 +36,8 @@ const sistema = computed(() => {
   )
 })
 
-/* -----------------------------------------
- * FORMATO DE PRESUPUESTO
- * ----------------------------------------- */
 
+/* FORMATO DE PRESUPIESTO */
 function formatearPresupuesto(valor: number) {
   return new Intl.NumberFormat('es-MX', {
     style: 'currency',
@@ -60,12 +49,8 @@ function formatearPresupuesto(valor: number) {
 <template>
   <section class="detalle-sistema">
 
-    <!-- =====================================
-         BOTÓN REGRESAR
-         ===================================== -->
-
+    <!-- BOTON DE REGRESAR -->
     <div class="back-container">
-
       <RouterLink
         to="/portal/sistemas"
         class="back-button"
@@ -73,22 +58,16 @@ function formatearPresupuesto(valor: number) {
         <span class="back-icon">←</span>
         Volver a Sistemas
       </RouterLink>
-
     </div>
 
-    <!-- =====================================
-         SISTEMA NO ENCONTRADO
-         ===================================== -->
-
+    <!-- SISTEMA NO ENCONTRADO -->
     <div
       v-if="!sistema"
       class="not-found"
     >
-
       <div class="not-found-icon">
-        ⚠
+        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
       </div>
-
       <h2>Sistema no encontrado</h2>
 
       <p>
@@ -105,263 +84,201 @@ function formatearPresupuesto(valor: number) {
 
     </div>
 
-    <!-- =====================================
-         DETALLE DEL SISTEMA
-         ===================================== -->
 
+    <!-- DETALLE DEL SISTEMA -->
     <template v-else>
 
-      <!-- ===================================
-           ENCABEZADO
-           =================================== -->
+      <!-- ENCABEZADO -->
 
       <header class="detail-header">
-
         <div class="header-main">
-
-          <div class="system-icon">
-            ⚙
-          </div>
-
           <div>
-
             <div class="system-id">
               Sistema #{{ sistema.id }}
             </div>
-
             <h1>
               {{ sistema.nombre }}
             </h1>
-
             <p>
               {{ sistema.descripcion }}
             </p>
-
           </div>
+
+          <span
+              class="estado-badge"
+              :class="{
+                activo: sistema.estado === 'Activo',
+                desarrollo: sistema.estado === 'En desarrollo',
+                inactivo: sistema.estado === 'Inactivo'
+              }"
+            >
+              {{ sistema.estado }}
+            </span>
+          
 
         </div>
 
-        <span
-          class="estado-badge"
-          :class="{
-            activo: sistema.estado === 'Activo',
-            desarrollo: sistema.estado === 'En desarrollo',
-            inactivo: sistema.estado === 'Inactivo'
-          }"
-        >
-          {{ sistema.estado }}
-        </span>
-
       </header>
 
-      <!-- ===================================
-           INFORMACIÓN GENERAL
-           =================================== -->
 
+      <!-- INFORMACION GENERAL -->
       <section class="detail-section">
-
         <div class="section-title">
-
           <div class="section-icon">
-            ℹ
+            <i class="fa fa-desktop menu-icon"></i>
           </div>
-
           <div>
             <h2>Información general</h2>
-
             <p>
               Datos principales del sistema.
             </p>
           </div>
-
         </div>
 
+        <!-- RESPONSABLE -->
         <div class="general-grid">
-
-          <!-- RESPONSABLE -->
-
           <div class="info-card">
-
             <span class="info-label">
               Responsable
             </span>
-
             <span class="info-value">
               {{ sistema.responsable }}
             </span>
-
           </div>
 
           <!-- DEPARTAMENTO -->
-
           <div class="info-card">
-
             <span class="info-label">
               Departamento
             </span>
-
             <span class="info-value">
               {{ sistema.departamento }}
             </span>
-
           </div>
 
           <!-- PRESUPUESTO -->
-
           <div class="info-card">
-
             <span class="info-label">
               Presupuesto
             </span>
-
             <span class="info-value budget">
               {{ formatearPresupuesto(sistema.presupuesto) }}
             </span>
-
           </div>
 
           <!-- FECHA CREACIÓN -->
-
           <div class="info-card">
-
             <span class="info-label">
               Fecha de creación
             </span>
-
             <span class="info-value">
               {{ sistema.fechaCreacion }}
             </span>
-
           </div>
 
           <!-- FECHA ACTUALIZACIÓN -->
-
           <div class="info-card">
-
             <span class="info-label">
               Última actualización
             </span>
-
             <span class="info-value">
               {{ sistema.fechaActualizacion }}
             </span>
-
           </div>
 
           <!-- ID -->
-
           <div class="info-card">
-
             <span class="info-label">
               Identificador
             </span>
-
             <span class="info-value">
               #{{ sistema.id }}
             </span>
-
           </div>
+
+          <div class="info-card">
+            <span class="info-label">Metodología</span>
+            <span class="info-value">{{ sistema.metodologia }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Fecha de inicio</span>
+            <span class="info-value">{{ sistema.fechaInicio }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Fecha de fin</span>
+            <span class="info-value">{{ sistema.fechaFin }}</span>
+          </div>
+
+
 
         </div>
-
       </section>
 
-      <!-- ===================================
-           OBJETIVO
-           =================================== -->
 
+      <!-- OBJETIVO -->
       <section class="detail-section">
-
         <div class="section-title">
-
           <div class="section-icon">
-            🎯
+            <i class="fa fa-bullseye" aria-hidden="true"></i>
           </div>
-
           <div>
-
             <h2>
               Objetivo del sistema
             </h2>
-
             <p>
               Propósito principal del proyecto.
             </p>
-
           </div>
-
         </div>
-
         <div class="objective-card">
           {{ sistema.objetivo }}
         </div>
-
       </section>
 
-      <!-- ===================================
-           INVENTARIO
-           =================================== -->
 
+      <!-- INVENTARIO -->
       <section class="detail-section">
-
         <div class="section-title">
-
           <div class="section-icon">
-            📦
+            <i class="fa fa-archive" aria-hidden="true"></i>
           </div>
-
           <div>
-
             <h2>
               Inventario
             </h2>
-
             <p>
               Recursos y equipo relacionados con el sistema.
             </p>
-
           </div>
-
         </div>
 
         <div class="table-container">
-
           <table class="detail-table">
-
             <thead>
-
               <tr>
                 <th>Recurso</th>
                 <th>Categoría</th>
                 <th>Cantidad</th>
                 <th>Estado</th>
               </tr>
-
             </thead>
-
             <tbody>
 
               <tr
                 v-for="(item, index) in sistema.inventario"
                 :key="index"
               >
-
                 <td class="resource-name">
                   {{ item.nombre }}
                 </td>
-
                 <td>
                   {{ item.categoria }}
                 </td>
-
                 <td>
-
                   <span class="quantity-badge">
                     {{ item.cantidad }}
                   </span>
-
                 </td>
-
                 <td>
 
                   <span
@@ -373,113 +290,79 @@ function formatearPresupuesto(valor: number) {
                   >
                     {{ item.estado }}
                   </span>
-
                 </td>
-
               </tr>
 
               <!-- SIN INVENTARIO -->
-
               <tr
                 v-if="sistema.inventario.length === 0"
               >
-
                 <td
                   colspan="4"
                   class="empty-table"
                 >
                   No hay elementos de inventario registrados.
                 </td>
-
               </tr>
-
             </tbody>
-
           </table>
-
         </div>
-
       </section>
 
-      <!-- ===================================
-           PERSONAL INVOLUCRADO
-           =================================== -->
-
+      <!-- PERSONAL INVOLUCRADO-->
       <section class="detail-section">
-
         <div class="section-title">
-
           <div class="section-icon">
-            👥
+            <i class="fa fa-users" aria-hidden="true"></i>
           </div>
 
           <div>
-
             <h2>
               Personal involucrado
             </h2>
-
             <p>
               Empleados relacionados con el desarrollo y operación.
             </p>
-
           </div>
-
         </div>
 
         <div class="employees-grid">
-
           <article
             v-for="(empleado, index) in sistema.empleados"
             :key="index"
             class="employee-card"
           >
-
             <div class="employee-avatar">
               {{ empleado.nombre.charAt(0) }}
             </div>
-
             <div class="employee-info">
-
               <h3>
                 {{ empleado.nombre }}
               </h3>
-
               <span class="employee-position">
                 {{ empleado.puesto }}
               </span>
-
               <span class="employee-department">
                 {{ empleado.departamento }}
               </span>
-
               <span class="participation-badge">
                 {{ empleado.participacion }}
               </span>
-
             </div>
-
           </article>
 
           <!-- SIN PERSONAL -->
-
           <div
             v-if="sistema.empleados.length === 0"
             class="empty-employees"
           >
             No hay personal registrado para este sistema.
           </div>
-
         </div>
-
       </section>
 
-      <!-- ===================================
-           PIE
-           =================================== -->
-
+      <!-- PIE -->
       <div class="detail-footer">
-
         <span>
           Información temporal para desarrollo.
         </span>
@@ -488,13 +371,11 @@ function formatearPresupuesto(valor: number) {
           to="/portal/sistemas"
           class="footer-return"
         >
-          ← Volver a la lista
+        Volver a la lista
         </RouterLink>
 
       </div>
-
     </template>
-
   </section>
 </template>
 
@@ -502,13 +383,11 @@ function formatearPresupuesto(valor: number) {
 
 .detalle-sistema {
   width: 100%;
-  color: #4d6787;
+  color: #5F0032;
 }
 
-/* ==========================================
-   BOTÓN REGRESAR
-   ========================================== */
 
+/* BOTON DE REGRESAR */
 .back-container {
   margin-bottom: 18px;
 }
@@ -518,10 +397,10 @@ function formatearPresupuesto(valor: number) {
   align-items: center;
   gap: 7px;
   padding: 8px 13px;
-  border-radius: 8px;
-  background: #f6f3cf;
-  border: 1px solid #f2eab4;
-  color: #4d6787;
+  border-radius: 999px;
+  background: #FBEAF9;
+  border: 1px solid #F0CBEC;
+  color: #5F0032;
   text-decoration: none;
   font-size: 12px;
   font-weight: 700;
@@ -529,7 +408,7 @@ function formatearPresupuesto(valor: number) {
 }
 
 .back-button:hover {
-  background: #fffde1;
+  background: #FBEAF9;
   transform: translateX(-2px);
 }
 
@@ -537,19 +416,18 @@ function formatearPresupuesto(valor: number) {
   font-size: 16px;
 }
 
-/* ==========================================
-   ENCABEZADO
-   ========================================== */
 
+/* ENCABEZADO  PRINCIPAL*/
 .detail-header {
+  position: relative;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: flex-start;
   gap: 20px;
   padding: 24px;
   margin-bottom: 18px;
-  background: #fffde1;
-  border: 1px solid #f2eab4;
+  background: #E8F9A2;
+  border: 1px solid #d8ee81;
   border-radius: 16px;
 }
 
@@ -559,22 +437,9 @@ function formatearPresupuesto(valor: number) {
   gap: 15px;
 }
 
-.system-icon {
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 12px;
-  background: #cfebff;
-  color: #4d6787;
-  font-size: 22px;
-}
-
 .system-id {
   margin-bottom: 4px;
-  color: #8a94a1;
+  color: #57595B;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -583,7 +448,7 @@ function formatearPresupuesto(valor: number) {
 
 .detail-header h1 {
   margin: 0 0 6px;
-  color: #4d6787;
+  color: #5F0032;
   font-size: 25px;
   font-weight: 800;
 }
@@ -591,22 +456,20 @@ function formatearPresupuesto(valor: number) {
 .detail-header p {
   max-width: 650px;
   margin: 0;
-  color: #7d8794;
+  color: #57595B;
   font-size: 13px;
   line-height: 1.5;
 }
 
-/* ==========================================
-   ESTADO
-   ========================================== */
 
+/* ESTADO DEL SISTEMA*/
 .estado-badge {
+  text-align: right;
   display: inline-block;
   padding: 6px 11px;
   border-radius: 7px;
   font-size: 10px;
   font-weight: 800;
-  white-space: nowrap;
 }
 
 .estado-badge.activo {
@@ -624,10 +487,8 @@ function formatearPresupuesto(valor: number) {
   color: #991b1b;
 }
 
-/* ==========================================
-   SECCIONES
-   ========================================== */
 
+/* SECCIONES */
 .detail-section {
   margin-bottom: 18px;
   padding: 22px;
@@ -650,13 +511,13 @@ function formatearPresupuesto(valor: number) {
   justify-content: center;
   align-items: center;
   border-radius: 9px;
-  background: #cfebff;
+  background: #d1d0d0;
   font-size: 15px;
 }
 
 .section-title h2 {
   margin: 0 0 2px;
-  color: #4d6787;
+  color: #5F0032;
   font-size: 16px;
   font-weight: 800;
 }
@@ -667,10 +528,8 @@ function formatearPresupuesto(valor: number) {
   font-size: 11px;
 }
 
-/* ==========================================
-   INFORMACIÓN GENERAL
-   ========================================== */
 
+/* INFO GENERAL */
 .general-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -704,13 +563,11 @@ function formatearPresupuesto(valor: number) {
   color: #365d42;
 }
 
-/* ==========================================
-   OBJETIVO
-   ========================================== */
 
+/* OBJETIVO */
 .objective-card {
   padding: 16px;
-  border-left: 4px solid #cfebff;
+  border-left: 4px solid #F1C0EC;
   border-radius: 8px;
   background: #f8fafc;
   color: #526274;
@@ -718,10 +575,8 @@ function formatearPresupuesto(valor: number) {
   line-height: 1.7;
 }
 
-/* ==========================================
-   TABLAS
-   ========================================== */
 
+/* TABLAS */
 .table-container {
   width: 100%;
   overflow-x: auto;
@@ -735,12 +590,12 @@ function formatearPresupuesto(valor: number) {
 }
 
 .detail-table thead {
-  background: #f6f3cf;
+  background: #d1d0d0;
 }
 
 .detail-table th {
   padding: 11px 12px;
-  color: #4d6787;
+  color: #5F0032;
   text-align: left;
   font-size: 10px;
   font-weight: 800;
@@ -765,8 +620,8 @@ function formatearPresupuesto(valor: number) {
   justify-content: center;
   padding: 4px 7px;
   border-radius: 5px;
-  background: #cfebff;
-  color: #4d6787;
+  background: #F1C0EC;
+  color: #5F0032;
   font-weight: 800;
 }
 
@@ -794,10 +649,8 @@ function formatearPresupuesto(valor: number) {
   color: #8a94a1 !important;
 }
 
-/* ==========================================
-   EMPLEADOS
-   ========================================== */
 
+/* EMPLEADOS */
 .employees-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -822,8 +675,8 @@ function formatearPresupuesto(valor: number) {
   justify-content: center;
   align-items: center;
   border-radius: 50%;
-  background: #cfebff;
-  color: #4d6787;
+  background: #F1C0EC;
+  color: #5F0032;
   font-size: 15px;
   font-weight: 800;
 }
@@ -858,8 +711,8 @@ function formatearPresupuesto(valor: number) {
   margin-top: 7px;
   padding: 3px 7px;
   border-radius: 5px;
-  background: #fffde1;
-  color: #7a7134;
+  background: #FBEAF9;
+  color: #5F0032;
   font-size: 9px;
   font-weight: 700;
 }
@@ -874,10 +727,8 @@ function formatearPresupuesto(valor: number) {
   text-align: center;
 }
 
-/* ==========================================
-   NO ENCONTRADO
-   ========================================== */
 
+/* NO ENCONTRADO */
 .not-found {
   padding: 50px 20px;
   text-align: center;
@@ -893,7 +744,7 @@ function formatearPresupuesto(valor: number) {
 
 .not-found h2 {
   margin: 0 0 7px;
-  color: #4d6787;
+  color: #5F0032;
   font-size: 19px;
 }
 
@@ -907,17 +758,15 @@ function formatearPresupuesto(valor: number) {
   display: inline-block;
   padding: 9px 14px;
   border-radius: 8px;
-  background: #cfebff;
-  color: #4d6787;
+  background: #F1C0EC;
+  color: #5F0032;
   text-decoration: none;
   font-size: 12px;
   font-weight: 700;
 }
 
-/* ==========================================
-   PIE
-   ========================================== */
 
+/* PIE */
 .detail-footer {
   display: flex;
   justify-content: space-between;
@@ -929,7 +778,7 @@ function formatearPresupuesto(valor: number) {
 }
 
 .footer-return {
-  color: #4d6787;
+  color: #5F0032;
   font-weight: 700;
   text-decoration: none;
 }
@@ -938,10 +787,8 @@ function formatearPresupuesto(valor: number) {
   text-decoration: underline;
 }
 
-/* ==========================================
-   RESPONSIVE
-   ========================================== */
 
+/* RESPONSIVIDAD */
 @media (max-width: 900px) {
 
   .general-grid {
