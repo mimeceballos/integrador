@@ -2,6 +2,7 @@
 import { reactive, ref, computed, inject, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import type { Ref } from 'vue'
+import { ArrowLeft, X, Check } from 'lucide-vue-next' //Iconos de la libreria
 
 import {
   agregarSistema,
@@ -23,6 +24,7 @@ const currentPermission = inject<Ref<PermissionCode>>('currentPermission')
 
 // Solo el permiso 3 (Escritura) puede crear o editar
 const canWrite = computed(() => currentPermission?.value === 3)
+
 /* -----------------------------------------
  * MODO: NUEVO O EDICIÓN
  * -----------------------------------------
@@ -45,7 +47,7 @@ const metodologias = [
   'Lean',
   'Híbrida'
 ]
-const estados = ['Activo', 'En desarrollo', 'Inactivo']
+const estados = ['Activo', 'Desarrollo', 'Inactivo']
 
 
 /* -FORMULARIO */
@@ -54,7 +56,10 @@ interface FormData {
   nombre: string
   descripcion: string
   estado: string
-  responsable: string
+  responsableEmail: string
+  responsableNombre: string
+  responsableApellidoPaterno: string
+  responsableApellidoMaterno: string
   fechaInicio: string 
   fechaFin: string
 }
@@ -63,8 +68,11 @@ const form = reactive<FormData>({
   metodologia: '',
   nombre: '',
   descripcion: '',
-  estado: 'En desarrollo',
-  responsable: '',
+  estado: 'Desarrollo',
+  responsableEmail: '',
+  responsableNombre: '',
+  responsableApellidoPaterno: '',
+  responsableApellidoMaterno: '',
   fechaInicio: '',
   fechaFin: ''
 })
@@ -75,7 +83,7 @@ const fechaActualizacion = ref(fechaHoy())
 const errors = reactive<Partial<Record<keyof FormData, string>>>({})
 const isSaving = ref(false)
 
-// Carga los datos (si es edición) o limpia el formulario (si es nuevo)
+// Carga los datos (si es edición) o asigna valores por defecto (si es nuevo)
 function cargarFormulario() {
   noEncontrado.value = false
 
@@ -85,10 +93,22 @@ function cargarFormulario() {
     form.metodologia = ''
     form.nombre = ''
     form.descripcion = ''
-    form.estado = 'En desarrollo'
-    form.responsable = ''
-    form.fechaInicio = ''
-    form.fechaFin = ''
+    form.estado = 'Desarrollo'
+    form.responsableEmail = ''
+    form.responsableNombre = ''
+    form.responsableApellidoPaterno = ''
+    form.responsableApellidoMaterno = ''
+
+    //Para calcular las fechas
+    // 1. Asignar la fecha de hoy local en formato "YYYY-MM-DD"
+    const hoy: Date = new Date()
+    form.fechaInicio = hoy.toLocaleDateString('sv-SE')
+
+    // 2. Crear fecha de fin sumándole 3 meses a la fecha actual
+    const fechaFinCalculada: Date = new Date()
+    fechaFinCalculada.setMonth(fechaFinCalculada.getMonth() + 3)
+    form.fechaFin = fechaFinCalculada.toLocaleDateString('sv-SE')
+
     fechaActualizacion.value = fechaHoy()
     return
   }
@@ -103,7 +123,14 @@ function cargarFormulario() {
   form.nombre = existente.nombre
   form.descripcion = existente.descripcion
   form.estado = existente.estado
-  form.responsable = existente.responsable
+
+  // Separar el nombre del responsable para los 4 nuevos campos en edición
+  const partesNombre = (existente.responsable || '').split(' ')
+  form.responsableNombre = partesNombre[0] || ''
+  form.responsableApellidoPaterno = partesNombre[1] || ''
+  form.responsableApellidoMaterno = partesNombre.slice(2).join(' ') || ''
+  form.responsableEmail = (existente as any).responsableEmail || ''
+
   form.fechaInicio = fechaAIso(existente.fechaInicio)
   form.fechaFin = fechaAIso(existente.fechaFin)
   fechaActualizacion.value = existente.fechaActualizacion
@@ -134,10 +161,24 @@ function validate(): boolean {
     errors.estado = 'Selecciona un estado'
     valid = false
   }
-  if (!form.responsable.trim()) {
-    errors.responsable = 'El responsable es obligatorio'
+
+  /* Validaciones para los datos del responsable */
+  if (!form.responsableEmail.trim()) {
+    errors.responsableEmail = 'El correo electrónico es obligatorio'
+    valid = false
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.responsableEmail)) {
+    errors.responsableEmail = 'Ingresa un correo electrónico válido'
     valid = false
   }
+  if (!form.responsableNombre.trim()) {
+    errors.responsableNombre = 'El nombre es obligatorio'
+    valid = false
+  }
+  if (!form.responsableApellidoPaterno.trim()) {
+    errors.responsableApellidoPaterno = 'El apellido paterno es obligatorio'
+    valid = false
+  }
+
   if (!form.fechaInicio) {
     errors.fechaInicio = 'La fecha de inicio es obligatoria'
     valid = false
@@ -157,15 +198,21 @@ function validate(): boolean {
 function handleSubmit() {
   if (!canWrite.value || !validate()) return
   isSaving.value = true
+
+  // Concatenación del nombre completo
+  const nombreCompletoResponsable = `${form.responsableNombre.trim()} ${form.responsableApellidoPaterno.trim()} ${form.responsableApellidoMaterno.trim()}`.trim()
+
   const datos = {
     metodologia: form.metodologia,
     nombre: form.nombre.trim(),
     descripcion: form.descripcion.trim(),
     estado: form.estado,
-    responsable: form.responsable.trim(),
+    responsable: nombreCompletoResponsable,
+    responsableEmail: form.responsableEmail.trim(),
     fechaInicio: isoAFecha(form.fechaInicio),
     fechaFin: isoAFecha(form.fechaFin)
   }
+
   if (esEdicion.value) {
     // fechaActualizacion se asigna sola dentro de actualizarSistema
     actualizarSistema(sistemaId.value as number, datos)
@@ -192,10 +239,10 @@ function handleCancel() {
 <template>
   <section class="sistema-form">
 
-    <!-- REGRESAR -->
+    <!-- REGRESAR CON ÍCONO DE LUCIDE -->
     <div class="back-container">
       <RouterLink to="/portal/sistemas" class="back-button">
-        <span class="back-icon">←</span>
+        <ArrowLeft :size="16" class="back-icon" />
         Volver a sistemas
       </RouterLink>
     </div>
@@ -243,7 +290,7 @@ function handleCancel() {
         </div>
 
         <!-- NOMBRE -->
-        <div class="field">
+        <div class="field field-span-2">
           <label for="nombre">Nombre del proyecto</label>
           <input
             id="nombre"
@@ -261,7 +308,7 @@ function handleCancel() {
           <textarea
             id="descripcion"
             v-model="form.descripcion"
-            rows="3"
+            rows="2"
             placeholder="Describe brevemente el proyecto"
             :class="{ invalid: errors.descripcion }"
           ></textarea>
@@ -269,7 +316,7 @@ function handleCancel() {
         </div>
 
         <!-- ESTADO -->
-        <div class="field">
+        <div class="field field-full">
           <label for="estado">Estado</label>
           <select
             id="estado"
@@ -281,17 +328,64 @@ function handleCancel() {
           <span v-if="errors.estado" class="error-text">{{ errors.estado }}</span>
         </div>
 
-        <!-- RESPONSABLE -->
-        <div class="field">
-          <label for="responsable">Responsable</label>
+        <!-- SECCIÓN: DATOS DEL RESPONSABLE -->
+        <div class="section-divider field-full">
+          <h3>Datos del responsable</h3>
+        </div>
+
+        <!-- 1. CORREO ELECTRÓNICO -->
+        <div class="field field-span-2">
+          <label for="responsableEmail">Correo Electrónico</label>
           <input
-            id="responsable"
-            v-model="form.responsable"
-            type="text"
-            placeholder="Nombre del responsable"
-            :class="{ invalid: errors.responsable }"
+            id="responsableEmail"
+            v-model="form.responsableEmail"
+            type="email"
+            placeholder="ejemplo@dominio.com"
+            :class="{ invalid: errors.responsableEmail }"
           />
-          <span v-if="errors.responsable" class="error-text">{{ errors.responsable }}</span>
+          <span v-if="errors.responsableEmail" class="error-text">{{ errors.responsableEmail }}</span>
+        </div>
+
+        <!-- 2. NOMBRE -->
+        <div class="field">
+          <label for="responsableNombre">Nombre</label>
+          <input
+            id="responsableNombre"
+            v-model="form.responsableNombre"
+            type="text"
+            placeholder="Nombre(s)"
+            :class="{ invalid: errors.responsableNombre }"
+          />
+          <span v-if="errors.responsableNombre" class="error-text">{{ errors.responsableNombre }}</span>
+        </div>
+
+        <!-- 3. APELLIDO PATERNO -->
+        <div class="field">
+          <label for="responsableApellidoPaterno">Apellido Paterno</label>
+          <input
+            id="responsableApellidoPaterno"
+            v-model="form.responsableApellidoPaterno"
+            type="text"
+            placeholder="Primer apellido"
+            :class="{ invalid: errors.responsableApellidoPaterno }"
+          />
+          <span v-if="errors.responsableApellidoPaterno" class="error-text">{{ errors.responsableApellidoPaterno }}</span>
+        </div>
+
+        <!-- 4. APELLIDO MATERNO -->
+        <div class="field">
+          <label for="responsableApellidoMaterno">Apellido Materno</label>
+          <input
+            id="responsableApellidoMaterno"
+            v-model="form.responsableApellidoMaterno"
+            type="text"
+            placeholder="Segundo apellido (opcional)"
+          />
+        </div>
+
+        <!-- SECCIÓN: FECHAS DEL PROYECTO -->
+        <div class="section-divider field-full">
+          <h3>Fechas del proyecto</h3>
         </div>
 
         <!-- FECHA DE INICIO -->
@@ -301,6 +395,7 @@ function handleCancel() {
             id="fechaInicio"
             v-model="form.fechaInicio"
             type="date"
+            class="date-input"
             :class="{ invalid: errors.fechaInicio }"
           />
           <span v-if="errors.fechaInicio" class="error-text">{{ errors.fechaInicio }}</span>
@@ -313,6 +408,7 @@ function handleCancel() {
             id="fechaFin"
             v-model="form.fechaFin"
             type="date"
+            class="date-input"
             :min="form.fechaInicio || undefined"
             :class="{ invalid: errors.fechaFin }"
           />
@@ -320,7 +416,7 @@ function handleCancel() {
         </div>
 
         <!-- FECHA DE ACTUALIZACIÓN -->
-        <div class="field field-full">
+        <div class="field">
           <label for="fechaActualizacion">Fecha de actualización</label>
           <input
             id="fechaActualizacion"
@@ -333,14 +429,18 @@ function handleCancel() {
             Se actualiza automáticamente cada vez que guardas cambios.
           </span>
         </div>
+
       </div>
 
       <div class="form-actions">
         <button type="button" class="cancel-btn" @click="handleCancel">
-          Cancelar
+          <X :size="18" class="btn-icon" />
+          <span>Cancelar</span>
         </button>
+  
         <button type="submit" class="submit-btn" :disabled="isSaving">
-          {{ esEdicion ? 'Guardar cambios' : 'Registrar sistema' }}
+          <Check :size="18" class="btn-icon" />
+          <span>{{ esEdicion ? 'Guardar cambios' : 'Registrar sistema' }}</span>
         </button>
       </div>
     </form>
@@ -364,7 +464,7 @@ function handleCancel() {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 8px 13px;
+  padding: 8px 15px;
   border-radius: 999px;
   background: #FBEAF9;
   border: 1px solid #F0CBEC;
@@ -381,14 +481,16 @@ function handleCancel() {
 }
 
 .back-icon {
-  font-size: 16px;
+  flex-shrink: 0;
+  stroke-width: 2.5;
 }
 
 
 /* TARJETAS */
 .form-card,
 .notice-card {
-  max-width: 860px;
+  width: 100%;
+  max-width: 100%;
   padding: 32px 36px;
   box-sizing: border-box;
   background: #ffffff;
@@ -434,21 +536,44 @@ function handleCancel() {
 }
 
 
-/* CAMPOS*/
+/* SECCIONES EN EL FORMULARIO */
+.section-divider {
+  margin-top: 12px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 6px;
+}
+
+.section-divider h3 {
+  margin: 0;
+  color: #5F0032;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+
+/* CAMPOS EN GRID COMPACTO */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   column-gap: 32px;
+  row-gap: 12px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  margin-bottom: 22px;
+  margin-bottom: 12px;
 }
 
 .field-full {
   grid-column: 1 / -1;
+}
+
+.field-span-2 {
+  grid-column: span 2;
 }
 
 .field label {
@@ -473,9 +598,30 @@ function handleCancel() {
   transition: border-color 0.2s;
 }
 
+/* REGLAS CSS PARA FORZAR LA VISIBILIDAD DEL ÍCONO DE CALENDARIO */
+.field input[type="date"].date-input {
+  position: relative;
+  cursor: pointer;
+}
+
+/* Estilo explícito para el ícono nativo del selector de fecha */
+.field input[type="date"]::-webkit-calendar-picker-indicator {
+  display: block;
+  background-position: center;
+  background-size: contain;
+  cursor: pointer;
+  opacity: 0.7;
+  filter: invert(12%) sepia(85%) saturate(4522%) hue-rotate(308deg) brightness(50%) contrast(110%);
+  transition: opacity 0.2s;
+}
+
+.field input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
 .field textarea {
   resize: vertical;
-  min-height: 70px;
+  min-height: 55px;
 }
 
 .field input:focus,
@@ -512,7 +658,7 @@ function handleCancel() {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 8px;
+  margin-top: 20px;
 }
 
 .submit-btn,
@@ -524,9 +670,19 @@ function handleCancel() {
   text-transform: uppercase;
   border: none;
   border-radius: 999px;
-  padding: 13px 28px;
+  padding: 13px 26px;
   cursor: pointer;
   transition: opacity 0.2s, transform 0.15s;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-icon {
+  flex-shrink: 0;
+  stroke-width: 2.5;
 }
 
 .submit-btn {
@@ -552,6 +708,16 @@ function handleCancel() {
 
 
 /* RESPONSIVE */
+@media (max-width: 992px) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .field-span-2 {
+    grid-column: span 1;
+  }
+}
+
 @media (max-width: 700px) {
   .form-card,
   .notice-card {
@@ -560,6 +726,10 @@ function handleCancel() {
 
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .field-span-2 {
+    grid-column: span 1;
   }
 
   .form-actions {

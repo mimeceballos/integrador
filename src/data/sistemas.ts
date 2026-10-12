@@ -144,7 +144,7 @@ export const sistemas = ref<Sistema[]>([
     descripcion:
       'Control de productos, existencias y movimientos.',
 
-    estado: 'En desarrollo',
+    estado: 'Desarrollo',
 
     responsable: 'Carlos Ramírez',
 
@@ -294,7 +294,7 @@ export const sistemas = ref<Sistema[]>([
     descripcion:
       'Registro y seguimiento de solicitudes de clientes.',
 
-    estado: 'En desarrollo',
+    estado: 'Desarrollo',
 
     responsable: 'Miguel Torres',
 

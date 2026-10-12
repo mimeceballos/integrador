@@ -2,6 +2,7 @@
 import { ref, computed, inject } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { Ref } from 'vue'
+import { Monitor, Plus, Eye, Pencil, Trash2 } from 'lucide-vue-next' // íconos Eye, Pencil y Trash2 para las acciones de la tabla de libreria lucide-vue-next
 
 import {
   sistemas,
@@ -90,16 +91,23 @@ function cancelarEliminacion() {
 
     <!-- ENCABEZADO -->
     <div class="list-header">
-      <div>
-        <h2>Sistemas registrados</h2>
-        <p>
-          Consulta los sistemas registrados en el organizador.
-        </p>
+      <!-- Agrupador principal de título e ícono a la izquierda -->
+      <div class="header-main">
+        <Monitor :size="38" class="header-icon" /> 
+        <div class="header-text">
+          <h2>Sistemas registrados</h2>
+          <p>
+            Consulta los sistemas registrados en el organizador.
+          </p>
+        </div>
       </div>
 
+      <!-- Acciones y total alineados a la derecha -->
       <div class="header-actions">
+
         <RouterLink v-if="canWrite" to="/portal/sistemas/nuevo" class="new-system-btn">
-          + Nuevo sistema
+          <Plus :size="18" class="btn-icon" />
+          <span>Nuevo sistema</span>
         </RouterLink>
 
         <div class="total-sistemas">
@@ -111,7 +119,7 @@ function cancelarEliminacion() {
           </span>
         </div>
       </div>
-      </div>
+    </div>
 
     <!-- TABLA -->
     <div class="table-container">
@@ -160,7 +168,7 @@ function cancelarEliminacion() {
                 class="estado-badge"
                 :class="{
                   activo: sistema.estado === 'Activo',
-                  desarrollo: sistema.estado === 'En desarrollo',
+                  desarrollo: sistema.estado === 'Desarrollo',
                   inactivo: sistema.estado === 'Inactivo'
                 }"
               >
@@ -177,7 +185,7 @@ function cancelarEliminacion() {
               {{ sistema.fechaActualizacion }}
             </td>
             
-            <!-- ACCIONES -->
+            <!-- ACCIONES REEMPLAZADAS POR ÍCONOS Y TOOLTIPS -->
             <td>
               <div class="acciones">
                 <RouterLink
@@ -185,7 +193,7 @@ function cancelarEliminacion() {
                   class="action-btn view-btn"
                   title="Ver detalles del sistema"
                 >
-                  Ver detalles
+                  <Eye :size="15" />
                 </RouterLink>
 
                 <!-- EDITAR: Exclusivamente Administrador -->
@@ -195,7 +203,7 @@ function cancelarEliminacion() {
                   class="action-btn edit-btn"
                   title="Editar sistema"
                 >
-                  Editar
+                  <Pencil :size="15" />
                 </RouterLink>
 
                 <!-- ELIMINAR: Exclusivamente Administrador -->
@@ -206,7 +214,7 @@ function cancelarEliminacion() {
                   title="Eliminar sistema"
                   @click="confirmarEliminacion(sistema)"
                 >
-                  Eliminar
+                  <Trash2 :size="15" />
                 </button>
               </div>
             </td>
@@ -311,24 +319,42 @@ function cancelarEliminacion() {
 /* ENCABEZADO */
 .list-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between; /* Distribuye el título a la izquierda y acciones a la derecha */
   gap: 20px;
-  margin-bottom: 22px;
-  text-align: left;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
 }
 
-.list-header h2 {
-  margin: 0 0 5px;
-  color: #5F0032;
-  font-size: 30px;
-  font-weight: 800;
+.header-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.list-header p {
+.header-icon {
+  color: #5F0032;      /* Mismo color guinda/vino de tu tema */
+  flex-shrink: 0;
+  stroke-width: 2;     /* Grosor de las líneas del ícono */
+}
+
+.header-text h2 {
   margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #5F0032;
+}
+
+.header-text p {
+  margin: 4px 0 0 0;
   color: #6c7886;
   font-size: 15px;
+}
+
+.header-actions { 
+  display: flex; 
+  align-items: center; 
+  gap: 14px; 
 }
 
 .total-sistemas {
@@ -356,16 +382,11 @@ function cancelarEliminacion() {
   font-weight: 800;
 }
 
-.header-actions { 
-  display: flex; 
-  align-items: center; 
-  gap: 14px; 
-}
-
 .new-system-btn {
   display: inline-flex; 
   align-items: center; 
   justify-content: center;
+  gap: 6px; /*Espacio entre el ícono y el texto */
   padding: 12px 22px; 
   background: #99154E; 
   color: #ffffff;
@@ -378,6 +399,12 @@ function cancelarEliminacion() {
   white-space: nowrap;
   transition: opacity 0.2s, transform 0.15s;
 }
+
+.btn-icon { /*Estilo para el icono de + de "nuevo sistema"*/
+  flex-shrink: 0;
+  stroke-width: 2.8; /* Le da más grosor al signo + de Lucide */
+}
+
 .new-system-btn:hover { 
   opacity: 0.92; 
   transform: translateY(-1px); 
@@ -477,25 +504,24 @@ function cancelarEliminacion() {
 }
 
 
-/* ACCIONES */
+/* ACCIONES CON ÍCONOS COMPACTOS */
 .acciones {
   display: flex;
-  gap: 5px;
+  gap: 6px;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 9px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 8px;
   border: none;
   font-family: inherit;
-  font-size: 10px;
-  font-weight: 700;
-  text-decoration: none;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -507,6 +533,7 @@ function cancelarEliminacion() {
 
 .view-btn:hover {
   background: #E9A8E3;
+  transform: translateY(-1px);
 }
 
 .edit-btn {
@@ -516,6 +543,7 @@ function cancelarEliminacion() {
 
 .edit-btn:hover {
   background: #fde9a0;
+  transform: translateY(-1px);
 }
 
 .delete-btn {
@@ -525,6 +553,7 @@ function cancelarEliminacion() {
 
 .delete-btn:hover {
   background: #fecaca;
+  transform: translateY(-1px);
 }
 
 
@@ -560,7 +589,7 @@ function cancelarEliminacion() {
   gap: 15px;
   margin-top: 15px;
   padding: 11px 14px;
-  border-radius: 9px;
+  border-radius: 99px;
   background: #fafafa;
   color: #8a94a1;
   font-size: 10px;
