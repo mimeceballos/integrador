@@ -53,7 +53,7 @@ const canWrite = computed(() => {
 .sistemas-module {
   width: 100%;
   min-height: calc(100vh - 134px);
-  color: #4d6787;
+  color: #5F0032;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -68,7 +68,7 @@ const canWrite = computed(() => {
 
 .module-header h1 {
   margin: 0 0 6px;
-  color: #4d6787;
+  color: #5F0032;
   font-size: 28px;
   font-weight: 800;
   letter-spacing: 0.3px;
@@ -87,24 +87,22 @@ const canWrite = computed(() => {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 11px 18px;
-  background-color: #d9efbd;
-  color: #2d5a1e;
-  border: 1px solid #c4e3a4;
-  border-radius: 10px;
+  padding: 12px 22px;
+  background-color: #99154E;
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
   text-decoration: none;
   font-size: 13px;
   font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    transform 0.15s ease,
-    box-shadow 0.2s ease;
+  transition: opacity 0.2s, transform 0.15s;
 }
 
 .new-system-btn:hover {
-  background-color: #cbe8aa;
-  box-shadow: 0 3px 8px rgba(45, 90, 30, 0.12);
+  opacity: 0.92;
   transform: translateY(-1px);
 }
 
@@ -119,8 +117,8 @@ const canWrite = computed(() => {
   gap: 8px;
   margin-bottom: 18px;
   padding: 5px;
-  background-color: #fffde1;
-  border: 1px solid #f2eab4;
+  background-color: #FBEAF9;
+  border: 1px solid #F0CBEC;
   border-radius: 12px;
   width: fit-content;
 }
@@ -130,7 +128,7 @@ const canWrite = computed(() => {
   align-items: center;
   padding: 9px 15px;
   border-radius: 8px;
-  color: #4d6787;
+  color: #5F0032;
   text-decoration: none;
   font-size: 13px;
   font-weight: 700;
@@ -140,12 +138,12 @@ const canWrite = computed(() => {
 }
 
 .module-nav-link:hover {
-  background-color: #f7f3be;
+  background-color: #F5D6F2;
 }
 
 .module-nav-link.router-link-active {
-  background-color: #cfebff;
-  color: #4d6787;
+  background-color: #E8F9A2;
+  color: #5F0032;
 }
 
 /* CONTENEDOR DE LA VISTA INTERNA */
@@ -156,7 +154,7 @@ const canWrite = computed(() => {
   box-sizing: border-box;
   background-color: #ffffff;
   border: 1px solid #eef2f6;
-  border-radius: 16px;
+  border-radius: 20px;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
 }
 

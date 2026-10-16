@@ -3,6 +3,7 @@ import './style.css'
 import App from './App.vue'
 import router from './router'
 import { VueReCaptcha } from 'vue-recaptcha-v3' // Se importa la librería pasar usar el captcha
+import 'font-awesome/css/font-awesome.min.css'
 
 
 const app = createApp(App)

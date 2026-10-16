@@ -10,10 +10,8 @@ import {
 
 import type { Sistema } from '../../data/sistemas'
 
-/* -----------------------------------------
- * PERMISOS
- * ----------------------------------------- */
 
+/* PERMISOS */
 type PermissionCode = 1 | 2 | 3
 
 // Permiso actual del módulo Sistemas
@@ -21,10 +19,9 @@ const currentPermission = inject<Ref<PermissionCode>>(
   'currentPermission'
 )
 
-/* -----------------------------------------
- * USUARIO AUTENTICADO
- * ----------------------------------------- */
+const canWrite = computed(() => currentPermission?.value === 3)
 
+/* USUARIO AUTENTICADO */
 interface UserProfile {
   email: string
   name: string
@@ -38,67 +35,47 @@ interface UserProfile {
 }
 
 const currentUser = ref<UserProfile | null>(null)
-
 const sessionData = localStorage.getItem('auth_user')
 
 if (sessionData) {
   currentUser.value = JSON.parse(sessionData)
 }
 
-/* -----------------------------------------
- * PERMISOS DEL ADMINISTRADOR
- * ----------------------------------------- */
 
-// Por ahora mantenemos la regla establecida:
-// solamente Administrador puede editar y eliminar.
+/* PERMISOS DEL ADMIN */
+// Por ahora mantenemos la regla establecida: solamente Administrador puede editar y eliminar.
+
 const isAdmin = computed(() => {
   return currentUser.value?.roleName === 'Administrador'
 })
 
-/* -----------------------------------------
- * SISTEMAS
- * ----------------------------------------- */
+/* SISTEMAS */
 
-/*
- * IMPORTANTE:
- *
- * "sistemas" ya no es un arreglo local.
- *
- * Proviene de:
- *
- * src/data/sistemas.ts
- *
- * Por lo tanto:
- *
+/* IMPORTANTE:
+ * "sistemas" proviene de: src/data/sistemas.ts, por lo tanto:
  * SistemaLista.vue
  * SistemaDetalle.vue
  * SistemaForm.vue
- *
  * podrán trabajar sobre la misma fuente temporal.
  */
 
-/* -----------------------------------------
- * ELIMINACIÓN
- * ----------------------------------------- */
 
+
+/* ELIMINACION */
 // Sistema seleccionado para eliminar
 const sistemaAEliminar = ref<Sistema | null>(null)
 
 // Abrir modal de confirmación
 function confirmarEliminacion(sistema: Sistema) {
   if (!isAdmin.value) return
-
   sistemaAEliminar.value = sistema
 }
 
 // Eliminar definitivamente de la fuente temporal
 function eliminarSistema() {
   if (!sistemaAEliminar.value || !isAdmin.value) return
-
   const id = sistemaAEliminar.value.id
-
   eliminarSistemaDatos(id)
-
   sistemaAEliminar.value = null
 }
 
@@ -113,91 +90,72 @@ function cancelarEliminacion() {
 
     <!-- ENCABEZADO -->
     <div class="list-header">
-
       <div>
         <h2>Sistemas registrados</h2>
-
         <p>
           Consulta los sistemas registrados en el organizador.
         </p>
       </div>
 
-      <div class="total-sistemas">
+      <div class="header-actions">
+        <RouterLink v-if="canWrite" to="/portal/sistemas/nuevo" class="new-system-btn">
+          + Nuevo sistema
+        </RouterLink>
 
-        <span class="total-label">
-          Total
-        </span>
-
-        <span class="total-number">
-          {{ sistemas.length }}
-        </span>
-
+        <div class="total-sistemas">
+          <span class="total-label">
+            Total
+          </span>
+          <span class="total-number">
+            {{ sistemas.length }}
+          </span>
+        </div>
       </div>
-
-    </div>
+      </div>
 
     <!-- TABLA -->
     <div class="table-container">
-
       <table class="sistemas-table">
-
         <thead>
           <tr>
-
             <th>ID</th>
-
             <th>Nombre</th>
-
             <th>Descripción</th>
-
             <th>Estado</th>
-
             <th>Responsable</th>
-
             <th>Fecha actualización</th>
-
             <th>Acciones</th>
-
           </tr>
         </thead>
 
         <tbody>
-
           <tr
             v-for="sistema in sistemas"
             :key="sistema.id"
           >
-
             <!-- ID -->
             <td>
-
               <span class="id-badge">
                 #{{ sistema.id }}
               </span>
-
             </td>
 
             <!-- NOMBRE -->
             <td>
-
               <div class="nombre-sistema">
                 {{ sistema.nombre }}
               </div>
-
             </td>
 
             <!-- DESCRIPCIÓN -->
             <td>
-
               <div class="descripcion">
                 {{ sistema.descripcion }}
               </div>
-
             </td>
 
             <!-- ESTADO -->
             <td>
-
               <span
                 class="estado-badge"
                 :class="{
@@ -208,31 +166,20 @@ function cancelarEliminacion() {
               >
                 {{ sistema.estado }}
               </span>
-
             </td>
 
             <!-- RESPONSABLE -->
             <td>
               {{ sistema.responsable }}
             </td>
-
             <!-- FECHA -->
             <td>
               {{ sistema.fechaActualizacion }}
             </td>
-
+            
             <!-- ACCIONES -->
             <td>
-
               <div class="acciones">
-
-                <!--
-                  VER DETALLES
-
-                  Disponible para cualquier usuario
-                  que tenga acceso al módulo Sistemas.
-                -->
-
                 <RouterLink
                   :to="`/portal/sistemas/${sistema.id}`"
                   class="action-btn view-btn"
@@ -241,12 +188,7 @@ function cancelarEliminacion() {
                   Ver detalles
                 </RouterLink>
 
-                <!--
-                  EDITAR
-
-                  Exclusivamente Administrador.
-                -->
-
+                <!-- EDITAR: Exclusivamente Administrador -->
                 <RouterLink
                   v-if="isAdmin"
                   :to="`/portal/sistemas/${sistema.id}/editar`"
@@ -256,12 +198,7 @@ function cancelarEliminacion() {
                   Editar
                 </RouterLink>
 
-                <!--
-                  ELIMINAR
-
-                  Exclusivamente Administrador.
-                -->
-
+                <!-- ELIMINAR: Exclusivamente Administrador -->
                 <button
                   v-if="isAdmin"
                   type="button"
@@ -271,73 +208,52 @@ function cancelarEliminacion() {
                 >
                   Eliminar
                 </button>
-
               </div>
-
             </td>
-
           </tr>
 
           <!-- SIN REGISTROS -->
           <tr v-if="sistemas.length === 0">
-
             <td
               colspan="7"
               class="empty-state"
             >
-
               <div class="empty-icon">
-                📋
+                <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
               </div>
-
               <h3>
                 No hay sistemas registrados
               </h3>
-
               <p>
                 Actualmente no existen sistemas para mostrar.
               </p>
-
             </td>
-
           </tr>
-
         </tbody>
-
       </table>
-
     </div>
 
     <!-- INFORMACIÓN INFERIOR -->
     <div class="list-footer">
-
       <div>
-
         <strong>Nota:</strong>
-
         Los datos mostrados actualmente son temporales
         y se utilizan únicamente para el desarrollo de la interfaz.
-
       </div>
-
       <div class="permission-info">
-
         <span
           v-if="currentPermission === 2"
           class="read-only-message"
         >
           Modo lectura
         </span>
-
         <span
           v-else-if="currentPermission === 3"
           class="write-message"
         >
           Acceso de escritura
         </span>
-
       </div>
-
     </div>
 
     <!-- MODAL DE CONFIRMACIÓN -->
@@ -346,36 +262,24 @@ function cancelarEliminacion() {
       class="modal-overlay"
       @click.self="cancelarEliminacion"
     >
-
       <div class="confirmation-modal">
-
         <div class="modal-icon">
-          ⚠
+          <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
         </div>
-
         <h3>
           Eliminar sistema
         </h3>
-
         <p>
-
           ¿Estás seguro de que deseas eliminar
-
           <strong>
             {{ sistemaAEliminar.nombre }}
           </strong>?
-
         </p>
-
         <p class="modal-warning">
-
           Esta acción eliminará temporalmente el registro
           de la fuente de datos.
-
         </p>
-
         <div class="modal-actions">
-
           <button
             type="button"
             class="cancel-btn"
@@ -383,7 +287,6 @@ function cancelarEliminacion() {
           >
             Cancelar
           </button>
-
           <button
             type="button"
             class="confirm-delete-btn"
@@ -391,13 +294,9 @@ function cancelarEliminacion() {
           >
             Eliminar
           </button>
-
         </div>
-
       </div>
-
     </div>
-
   </section>
 </template>
 
@@ -405,30 +304,31 @@ function cancelarEliminacion() {
 
 .lista-sistemas {
   width: 100%;
-  color: #4d6787;
+  color: #5F0032;
 }
 
-/* ENCABEZADO */
 
+/* ENCABEZADO */
 .list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 20px;
   margin-bottom: 22px;
+  text-align: left;
 }
 
 .list-header h2 {
   margin: 0 0 5px;
-  color: #4d6787;
-  font-size: 21px;
+  color: #5F0032;
+  font-size: 30px;
   font-weight: 800;
 }
 
 .list-header p {
   margin: 0;
-  color: #7d8794;
-  font-size: 13px;
+  color: #6c7886;
+  font-size: 15px;
 }
 
 .total-sistemas {
@@ -438,8 +338,8 @@ function cancelarEliminacion() {
   justify-content: center;
   min-width: 70px;
   padding: 9px 15px;
-  background: #fffde1;
-  border: 1px solid #f2eab4;
+  background: #FBEAF9;
+  border: 1px solid #F0CBEC;
   border-radius: 12px;
 }
 
@@ -451,17 +351,44 @@ function cancelarEliminacion() {
 }
 
 .total-number {
-  color: #4d6787;
+  color: #5F0032;
   font-size: 22px;
   font-weight: 800;
 }
 
-/* TABLA */
+.header-actions { 
+  display: flex; 
+  align-items: center; 
+  gap: 14px; 
+}
 
+.new-system-btn {
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center;
+  padding: 12px 22px; 
+  background: #99154E; 
+  color: #ffffff;
+  border-radius: 15px; 
+  text-decoration: none;
+  font-size: 13px; 
+  font-weight: 700; 
+  letter-spacing: 1px;
+  text-transform: uppercase; 
+  white-space: nowrap;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.new-system-btn:hover { 
+  opacity: 0.92; 
+  transform: translateY(-1px); 
+}
+
+
+/* TABLA */
 .table-container {
   width: 100%;
   overflow-x: auto;
-  border: 1px solid #eef2f6;
+  border: 1px solid #eef6ee;
   border-radius: 12px;
 }
 
@@ -473,13 +400,13 @@ function cancelarEliminacion() {
 }
 
 .sistemas-table thead {
-  background: #f6f3cf;
+  background: #d1d0d0;
 }
 
 .sistemas-table th {
   padding: 13px 12px;
   text-align: left;
-  color: #4d6787;
+  color: #5F0032;
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
@@ -489,28 +416,24 @@ function cancelarEliminacion() {
 
 .sistemas-table td {
   padding: 14px 12px;
-  border-top: 1px solid #eef2f6;
+  border-top: 1px solid #eef6ee;
   color: #4a5563;
   font-size: 12px;
   vertical-align: middle;
 }
 
-.sistemas-table tbody tr {
-  transition: background-color 0.15s ease;
+.sistemas-table tbody tr:hover {
+  background-color: #FDF5FC;
 }
 
-.sistemas-table tbody tr:hover {
-  background-color: #fffef1;
-}
 
 /* DATOS */
-
 .id-badge {
   display: inline-block;
   padding: 4px 7px;
   border-radius: 6px;
-  background: #cfebff;
-  color: #4d6787;
+  background: #F1C0EC;
+  color: #5F0032;
   font-weight: 800;
 }
 
@@ -527,8 +450,8 @@ function cancelarEliminacion() {
   line-height: 1.4;
 }
 
-/* ESTADOS */
 
+/* ESTADOS */
 .estado-badge {
   display: inline-block;
   padding: 5px 9px;
@@ -553,8 +476,8 @@ function cancelarEliminacion() {
   color: #991b1b;
 }
 
-/* ACCIONES */
 
+/* ACCIONES */
 .acciones {
   display: flex;
   gap: 5px;
@@ -578,12 +501,12 @@ function cancelarEliminacion() {
 }
 
 .view-btn {
-  background: #cfebff;
-  color: #4d6787;
+  background: #F1C0EC;
+  color: #5F0032;
 }
 
 .view-btn:hover {
-  background: #b9e1fc;
+  background: #E9A8E3;
 }
 
 .edit-btn {
@@ -604,8 +527,8 @@ function cancelarEliminacion() {
   background: #fecaca;
 }
 
-/* ESTADO VACÍO */
 
+/* ESTADO VACÍO */
 .empty-state {
   padding: 55px 20px !important;
   text-align: center !important;
@@ -618,7 +541,7 @@ function cancelarEliminacion() {
 
 .empty-state h3 {
   margin: 0 0 7px;
-  color: #4d6787;
+  color: #5F0032;
   font-size: 16px;
 }
 
@@ -628,8 +551,8 @@ function cancelarEliminacion() {
   font-size: 12px;
 }
 
-/* PIE */
 
+/* PIE */
 .list-footer {
   display: flex;
   justify-content: space-between;
@@ -663,8 +586,8 @@ function cancelarEliminacion() {
   font-weight: 700;
 }
 
-/* MODAL */
 
+/* MODAL */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -736,7 +659,7 @@ function cancelarEliminacion() {
 
 .cancel-btn {
   background: #eef2f6;
-  color: #4d6787;
+  color: #5F0032;
 }
 
 .cancel-btn:hover {
@@ -752,8 +675,8 @@ function cancelarEliminacion() {
   background: #e88080;
 }
 
-/* RESPONSIVE */
 
+/* RESPONSIVE */
 @media (max-width: 900px) {
 
   .table-container {
