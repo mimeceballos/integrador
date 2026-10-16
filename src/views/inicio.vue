@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, provide } from 'vue'
+import { ref, computed, onMounted, provide, type Component } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { LogOut, Monitor, Users, ShieldCheck, BookOpen } from 'lucide-vue-next' // Iconos de la librería
 
 const router = useRouter()
 const route = useRoute()
 
-// 1 = Desactivo, 2 = Lectura, 3 = Escritura
 type PermissionCode = 1 | 2 | 3
 //datos del usuario autentificado (estructura)
 interface UserProfile {
@@ -20,13 +20,13 @@ interface UserProfile {
   }
 }
 
-// Interfaz para los elementos del menú lateral
+// Interfaz para los elementos del menú lateral (usamos 'icon' en vez de 'image')
 interface MenuItem {
   id: number
   name: string
   route: string
   level: number
-  image?: string
+  icon: Component
 }
 
 const isUserMenuOpen = ref(false)
@@ -64,12 +64,7 @@ const currentModulePermission = computed<PermissionCode>(() => {
 //pasa el nivel de permiso a los hijos
 provide('currentPermission', currentModulePermission)
 
-// Función para obtener la URL dinámica de las imágenes en PNG
-const getImageUrl = (name: string) => {
-  return new URL(`../assets/img/${name}.png`, import.meta.url).href
-}
-
-// Menú Lateral (Único y correcto)
+// Menú Lateral con íconos vectoriales de Lucide
 const menuItems = computed<MenuItem[]>(() => {
   const perms = currentUser.value?.permissions || {
     sistemas: 1,
@@ -79,10 +74,10 @@ const menuItems = computed<MenuItem[]>(() => {
   }
 
   return [
-    { id: 1, name: 'Sistemas', route: '/portal/sistemas', level: perms.sistemas, image: getImageUrl('icono_sistemas') },
-    { id: 2, name: 'Usuarios', route: '/portal/usuarios', level: perms.usuarios, image: getImageUrl('icono_usuarios') },
-    { id: 3, name: 'Roles', route: '/portal/roles', level: perms.roles, image: getImageUrl('icono_roles') },
-    { id: 4, name: 'Historias', route: '/portal/historias', level: perms.historias, image: getImageUrl('icono_historias') }
+    { id: 1, name: 'Sistemas', route: '/portal/sistemas', level: perms.sistemas, icon: Monitor },
+    { id: 2, name: 'Usuarios', route: '/portal/usuarios', level: perms.usuarios, icon: Users },
+    { id: 3, name: 'Roles', route: '/portal/roles', level: perms.roles, icon: ShieldCheck },
+    { id: 4, name: 'Historias', route: '/portal/historias', level: perms.historias, icon: BookOpen }
   ]
 })
 
@@ -110,9 +105,11 @@ function handleLogout() {
             class="menu-item"
             :class="{ 'is-readonly': item.level === 2 }"
           >
-            <!-- ÍCONO A LA IZQUIERDA -->
-            <img v-if="item.image" :src="item.image" :alt="item.name" class="menu-icon" />
+            <!-- ÍCONO DINÁMICO DE LUCIDE -->
+            <component :is="item.icon" :size="20" class="menu-icon" />
+
             <span class="item-name">{{ item.name }}</span>
+
             <span v-if="item.level === 2" class="badge badge-read" title="Acceso sin manipulación de datos">
             </span>
             <span v-else-if="item.level === 3" class="badge badge-write" title="Acceso total">
@@ -122,8 +119,10 @@ function handleLogout() {
       </nav>
 
       <button class="logout-btn" @click="handleLogout">
-        Cerrar Sesión
+        <LogOut :size="18" class="logout-icon" />
+        <span>Cerrar Sesión</span>
       </button>
+
     </aside>
 
     <div class="main-wrapper">
@@ -417,11 +416,11 @@ function handleLogout() {
   text-align: left;
 }
 
-/* Tamaño exacto para las imágenes/íconos pequeños a la izquierda */
+/* Íconos vectoriales del menú */
 .menu-icon {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
+  flex-shrink: 0;
+  stroke-width: 2.2; /* Grosor de los trazos */
+  transition: transform 0.2s ease;
 }
 
 /* BADGES PASTEL */
@@ -455,11 +454,23 @@ function handleLogout() {
   text-transform: uppercase;
   cursor: pointer;
   transition: opacity 0.2s, transform 0.15s;
+
+  /* REGLAS AÑADIDAS PARA ALINEAR EL ÍCONO Y EL TEXTO */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* Espacio entre la puerta y el texto */
 }
 
 .logout-btn:hover {
   opacity: 0.92;
   transform: translateY(-1px);
+}
+
+/* Estilo para ajustar el ícono de Lucide */
+.logout-icon {
+  flex-shrink: 0;
+  stroke-width: 2.5; /* Grosor de las líneas del ícono */
 }
 
 /* CONTENEDOR DERECHO */

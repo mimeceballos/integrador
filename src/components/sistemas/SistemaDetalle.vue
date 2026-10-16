@@ -108,7 +108,7 @@ function formatearPresupuesto(valor: number) {
               class="estado-badge"
               :class="{
                 activo: sistema.estado === 'Activo',
-                desarrollo: sistema.estado === 'En desarrollo',
+                desarrollo: sistema.estado === 'Desarrollo',
                 inactivo: sistema.estado === 'Inactivo'
               }"
             >
