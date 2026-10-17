@@ -1,8 +1,9 @@
 import { ref } from 'vue'
 
-/* =========================================
- * TIPOS
- * ========================================= */
+/* =========================================================================
+ * ESTRUCTURAS DE DATOS (INTERFACES)
+ * Aquí definimos los tipos de datos para que TypeScript no nos marque error.
+ * ========================================================================= */
 
 export interface InventarioItem {
   nombre: string
@@ -18,357 +19,124 @@ export interface Empleado {
   participacion: string
 }
 
+// Representa la estructura de cada Sistema o Proyecto registrado
 export interface Sistema {
   id: number
   nombre: string
   descripcion: string
   estado: string
   responsable: string
-
-  /** Scrum, Kanban, Cascada, etc. */
   metodologia: string
-
-  /** Fechas del proyecto, formato DD/MM/AAAA */
   fechaInicio: string
   fechaFin: string
-
   departamento: string
   objetivo: string
   presupuesto: number
-
   fechaCreacion: string
   fechaActualizacion: string
-
   inventario: InventarioItem[]
   empleados: Empleado[]
+
+  // Agregamos esta propiedad opcional para saber qué opciones del Navbar habilita este proyecto.
+  // Ejemplo: ['usuarios', 'historias']
+  opcionesNavbar?: string[]
 }
 
-/* =========================================
- * DATOS TEMPORALES COMPARTIDOS
- * ========================================= */
-
-/*
- * Esta es la fuente temporal de datos del módulo Sistemas.
- *
- * Los componentes:
- *
- * - SistemaLista.vue
- * - SistemaDetalle.vue
- * - SistemaForm.vue
- *
- * trabajan sobre este mismo arreglo.
- *
- * Más adelante esta fuente podrá sustituirse
- * por una API/backend sin tener que cambiar
- * la estructura visual de los componentes.
- */
+/* =========================================================================
+ * FUENTE DE DATOS REACTIVA (MOCK TEMPORAL)
+ * Usamos ref([]) para que los cambios se reflejen automáticamente en las vistas.
+ * ========================================================================= */
 
 export const sistemas = ref<Sistema[]>([
   {
     id: 1,
-
     nombre: 'Sistema de Recursos Humanos',
-
-    descripcion:
-      'Gestión y administración de información de empleados.',
-
+    descripcion: 'Gestión y administración de información de empleados.',
     estado: 'Activo',
-
     responsable: 'Laura Méndez',
-
     metodologia: 'Scrum',
-
     fechaInicio: '15/08/2026',
-
     fechaFin: '15/12/2026',
-
     departamento: 'Recursos Humanos',
-
-    objetivo:
-      'Centralizar la información de los empleados y facilitar la administración de procesos relacionados con el personal.',
-
+    objetivo: 'Centralizar la información de los empleados.',
     presupuesto: 150000,
-
     fechaCreacion: '15/08/2026',
-
     fechaActualizacion: '20/09/2026',
-
+    // Este proyecto solo permite ver "Usuarios" e "Historias" en el Navbar
+    opcionesNavbar: ['usuarios', 'roles', 'historias'],
     inventario: [
-      {
-        nombre: 'Computadoras de escritorio',
-        cantidad: 12,
-        categoria: 'Equipo de cómputo',
-        estado: 'Disponible'
-      },
-      {
-        nombre: 'Laptops',
-        cantidad: 5,
-        categoria: 'Equipo de cómputo',
-        estado: 'Disponible'
-      },
-      {
-        nombre: 'Impresoras',
-        cantidad: 3,
-        categoria: 'Periféricos',
-        estado: 'En uso'
-      }
+      { nombre: 'Computadoras de escritorio', cantidad: 12, categoria: 'Equipo de cómputo', estado: 'Disponible' }
     ],
-
     empleados: [
-      {
-        nombre: 'Laura Méndez',
-        puesto: 'Jefa de Recursos Humanos',
-        departamento: 'Recursos Humanos',
-        participacion: 'Responsable del proyecto'
-      },
-      {
-        nombre: 'Daniel Ortega',
-        puesto: 'Analista de Recursos Humanos',
-        departamento: 'Recursos Humanos',
-        participacion: 'Análisis y pruebas'
-      },
-      {
-        nombre: 'Andrea Castillo',
-        puesto: 'Desarrolladora',
-        departamento: 'Tecnologías de la Información',
-        participacion: 'Desarrollo del sistema'
-      }
+      { nombre: 'Laura Méndez', puesto: 'Jefa de RRHH', departamento: 'Recursos Humanos', participacion: 'Responsable' }
     ]
   },
-
   {
     id: 2,
-
     nombre: 'Sistema de Inventarios',
-
-    descripcion:
-      'Control de productos, existencias y movimientos.',
-
+    descripcion: 'Control de productos, existencias y movimientos.',
     estado: 'Desarrollo',
-
     responsable: 'Carlos Ramírez',
-
     metodologia: 'Kanban',
-
     fechaInicio: '01/09/2026',
-
     fechaFin: '30/11/2026',
-
     departamento: 'Almacén',
-
-    objetivo:
-      'Mejorar el control de productos y mantener actualizada la información de existencias de la empresa.',
-
+    objetivo: 'Mejorar el control de productos.',
     presupuesto: 95000,
-
     fechaCreacion: '01/09/2026',
-
     fechaActualizacion: '22/09/2026',
-
+    // Este proyecto permite ver "Usuarios", "Roles" e "Historias" (Todo activo)
+    opcionesNavbar: ['usuarios', 'roles', 'historias'],
     inventario: [
-      {
-        nombre: 'Lectores de código de barras',
-        cantidad: 8,
-        categoria: 'Equipo',
-        estado: 'Disponible'
-      },
-      {
-        nombre: 'Terminales de almacén',
-        cantidad: 6,
-        categoria: 'Equipo de cómputo',
-        estado: 'En uso'
-      },
-      {
-        nombre: 'Impresoras térmicas',
-        cantidad: 4,
-        categoria: 'Periféricos',
-        estado: 'Disponible'
-      },
-      {
-        nombre: 'Servidores',
-        cantidad: 2,
-        categoria: 'Infraestructura',
-        estado: 'En uso'
-      }
+      { nombre: 'Lectores de código de barras', cantidad: 8, categoria: 'Equipo', estado: 'Disponible' }
     ],
-
     empleados: [
-      {
-        nombre: 'Carlos Ramírez',
-        puesto: 'Jefe de Almacén',
-        departamento: 'Almacén',
-        participacion: 'Responsable del proyecto'
-      },
-      {
-        nombre: 'Fernando López',
-        puesto: 'Encargado de Inventario',
-        departamento: 'Almacén',
-        participacion: 'Operación y pruebas'
-      },
-      {
-        nombre: 'Mariana Torres',
-        puesto: 'Ingeniera de Software',
-        departamento: 'Tecnologías de la Información',
-        participacion: 'Desarrollo del sistema'
-      }
+      { nombre: 'Carlos Ramírez', puesto: 'Jefe de Almacén', departamento: 'Almacén', participacion: 'Responsable' }
     ]
   },
-
   {
     id: 3,
-
     nombre: 'Sistema de Ventas',
-
-    descripcion:
-      'Administración de ventas y seguimiento de clientes.',
-
+    descripcion: 'Administración de ventas y seguimiento de clientes.',
     estado: 'Activo',
-
     responsable: 'Sofía Hernández',
-
     metodologia: 'Cascada',
-
     fechaInicio: '10/07/2026',
-
     fechaFin: '10/10/2026',
-
     departamento: 'Ventas',
-
-    objetivo:
-      'Registrar las operaciones comerciales y facilitar el seguimiento de clientes y ventas realizadas.',
-
+    objetivo: 'Registrar las operaciones comerciales.',
     presupuesto: 210000,
-
     fechaCreacion: '10/07/2026',
-
     fechaActualizacion: '18/09/2026',
-
-    inventario: [
-      {
-        nombre: 'Terminales de venta',
-        cantidad: 10,
-        categoria: 'Equipo',
-        estado: 'En uso'
-      },
-      {
-        nombre: 'Tabletas',
-        cantidad: 8,
-        categoria: 'Equipo móvil',
-        estado: 'Disponible'
-      },
-      {
-        nombre: 'Impresoras de tickets',
-        cantidad: 10,
-        categoria: 'Periféricos',
-        estado: 'En uso'
-      }
-    ],
-
-    empleados: [
-      {
-        nombre: 'Sofía Hernández',
-        puesto: 'Gerente de Ventas',
-        departamento: 'Ventas',
-        participacion: 'Responsable del proyecto'
-      },
-      {
-        nombre: 'Ricardo Gómez',
-        puesto: 'Supervisor de Ventas',
-        departamento: 'Ventas',
-        participacion: 'Pruebas y validación'
-      },
-      {
-        nombre: 'Paola Vargas',
-        puesto: 'Analista de Sistemas',
-        departamento: 'Tecnologías de la Información',
-        participacion: 'Desarrollo y soporte'
-      }
-    ]
+    // Este proyecto solo habilita "Roles" e "Historias"
+    opcionesNavbar: ['usuarios', 'roles', 'historias'],
+    inventario: [],
+    empleados: []
   },
-
   {
     id: 4,
-
     nombre: 'Sistema de Atención al Cliente',
-
-    descripcion:
-      'Registro y seguimiento de solicitudes de clientes.',
-
+    descripcion: 'Registro y seguimiento de solicitudes de clientes.',
     estado: 'Desarrollo',
-
     responsable: 'Miguel Torres',
-
     metodologia: 'Scrum',
-
     fechaInicio: '05/08/2026',
-
     fechaFin: '05/01/2027',
-
     departamento: 'Atención al Cliente',
-
-    objetivo:
-      'Centralizar las solicitudes de los clientes y mejorar el seguimiento de los casos reportados.',
-
+    objetivo: 'Centralizar las solicitudes de los clientes.',
     presupuesto: 120000,
-
     fechaCreacion: '05/08/2026',
-
     fechaActualizacion: '21/09/2026',
-
-    inventario: [
-      {
-        nombre: 'Computadoras',
-        cantidad: 15,
-        categoria: 'Equipo de cómputo',
-        estado: 'En uso'
-      },
-      {
-        nombre: 'Auriculares',
-        cantidad: 18,
-        categoria: 'Periféricos',
-        estado: 'Disponible'
-      },
-      {
-        nombre: 'Teléfonos IP',
-        cantidad: 12,
-        categoria: 'Comunicación',
-        estado: 'En uso'
-      }
-    ],
-
-    empleados: [
-      {
-        nombre: 'Miguel Torres',
-        puesto: 'Coordinador de Atención',
-        departamento: 'Atención al Cliente',
-        participacion: 'Responsable del proyecto'
-      },
-      {
-        nombre: 'Gabriela Ruiz',
-        puesto: 'Supervisora',
-        departamento: 'Atención al Cliente',
-        participacion: 'Análisis y pruebas'
-      },
-      {
-        nombre: 'Jorge Navarro',
-        puesto: 'Desarrollador',
-        departamento: 'Tecnologías de la Información',
-        participacion: 'Desarrollo del sistema'
-      }
-    ]
+    opcionesNavbar: ['usuarios', 'roles', 'historias'],
+    inventario: [],
+    empleados: []
   }
 ])
 
-/* =========================================
- * FECHAS
- * =========================================
- * Internamente las fechas se guardan como
- * texto DD/MM/AAAA. Los <input type="date">
- * trabajan con AAAA-MM-DD, por eso estas
- * funciones convierten entre ambos formatos.
- */
+/* =========================================================================
+ * FUNCIONES AUXILIARES DE FECHAS
+ * ========================================================================= */
 
-// Fecha de hoy en formato DD/MM/AAAA
 export function fechaHoy(): string {
   const hoy = new Date()
   const dd = String(hoy.getDate()).padStart(2, '0')
@@ -376,114 +144,62 @@ export function fechaHoy(): string {
   return `${dd}/${mm}/${hoy.getFullYear()}`
 }
 
-// 'AAAA-MM-DD' -> 'DD/MM/AAAA'
 export function isoAFecha(iso: string): string {
   if (!iso) return ''
   const [y, m, d] = iso.split('-')
   return `${d}/${m}/${y}`
 }
 
-// 'DD/MM/AAAA' -> 'AAAA-MM-DD'
 export function fechaAIso(fecha: string): string {
   if (!fecha) return ''
   const [d, m, y] = fecha.split('/')
   return `${y}-${m}-${d}`
 }
 
-/* =========================================
- * GENERAR NUEVO ID
- * ========================================= */
+/* =========================================================================
+ * FUNCIONES CRUD DENTRO DEL REPOSITORIO
+ * ========================================================================= */
 
 function generarNuevoId(): number {
-  if (sistemas.value.length === 0) {
-    return 1
-  }
-
-  return Math.max(
-    ...sistemas.value.map(sistema => sistema.id)
-  ) + 1
+  if (sistemas.value.length === 0) return 1
+  return Math.max(...sistemas.value.map(s => s.id)) + 1
 }
-
-/* =========================================
- * AGREGAR SISTEMA
- * ========================================= */
 
 export function agregarSistema(
   datos: Omit<Sistema, 'id' | 'fechaCreacion' | 'fechaActualizacion'>
 ): Sistema {
-
-  // Las fechas de creación y actualización
-  // se asignan automáticamente con la fecha de hoy.
   const nuevoSistema: Sistema = {
     id: generarNuevoId(),
     ...datos,
     fechaCreacion: fechaHoy(),
     fechaActualizacion: fechaHoy()
   }
-
   sistemas.value.push(nuevoSistema)
-
   return nuevoSistema
 }
-
-/* =========================================
- * ACTUALIZAR SISTEMA
- * ========================================= */
 
 export function actualizarSistema(
   id: number,
   datos: Partial<Omit<Sistema, 'id'>>
 ): Sistema | undefined {
+  const indice = sistemas.value.findIndex(s => s.id === id)
+  if (indice === -1) return undefined
 
-  const indice = sistemas.value.findIndex(
-    sistema => sistema.id === id
-  )
-
-  if (indice === -1) {
-    return undefined
-  }
-
-  // fechaActualizacion se refresca sola en cada edición,
-  // sin importar lo que venga en "datos".
   sistemas.value[indice] = {
     ...sistemas.value[indice],
     ...datos,
     fechaActualizacion: fechaHoy()
   }
-
   return sistemas.value[indice]
 }
 
-/* =========================================
- * ELIMINAR SISTEMA
- * ========================================= */
-
-export function eliminarSistema(
-  id: number
-): boolean {
-
-  const indice = sistemas.value.findIndex(
-    sistema => sistema.id === id
-  )
-
-  if (indice === -1) {
-    return false
-  }
-
+export function eliminarSistema(id: number): boolean {
+  const indice = sistemas.value.findIndex(s => s.id === id)
+  if (indice === -1) return false
   sistemas.value.splice(indice, 1)
-
   return true
 }
 
-/* =========================================
- * BUSCAR SISTEMA
- * ========================================= */
-
-export function obtenerSistema(
-  id: number
-): Sistema | undefined {
-
-  return sistemas.value.find(
-    sistema => sistema.id === id
-  )
+export function obtenerSistema(id: number): Sistema | undefined {
+  return sistemas.value.find(s => s.id === id)
 }

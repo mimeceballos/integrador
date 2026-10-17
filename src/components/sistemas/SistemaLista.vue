@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { Ref } from 'vue'
-import { Monitor, Plus, Eye, Pencil, Trash2 } from 'lucide-vue-next' // íconos Eye, Pencil y Trash2 para las acciones de la tabla de libreria lucide-vue-next
+import { Monitor, Plus, Eye, Pencil, Trash2 } from 'lucide-vue-next'
 
+// Importamos la lista global y la función de eliminar
 import {
   sistemas,
   eliminarSistema as eliminarSistemaDatos
@@ -11,18 +12,46 @@ import {
 
 import type { Sistema } from '../../data/sistemas'
 
+/* =========================================================================
+ * PROYECTO ACTIVO (SELECCIÓN ÚNICA CON TOGGLE)
+ * ========================================================================= */
 
-/* PERMISOS */
+// Guardamos el ID del sistema que está seleccionado actualmente. Si no hay ninguno, es null.
+const sistemaSeleccionadoId = ref<number | null>(null)
+
+// Cuando el componente se monta en pantalla, revisamos si ya había un proyecto guardado en localStorage
+onMounted(() => {
+  const guardado = localStorage.getItem('proyecto_activo_id')
+  if (guardado) {
+    sistemaSeleccionadoId.value = Number(guardado)
+  }
+})
+
+// Función para seleccionar/desmarcar un proyecto cuando se hace clic en la casilla
+function toggleProyecto(id: number) {
+  // Si el proyecto presionado ya era el activo, LO DESACTIVAMOS (comportamiento toggle)
+  if (sistemaSeleccionadoId.value === id) {
+    sistemaSeleccionadoId.value = null
+    localStorage.removeItem('proyecto_activo_id')
+    //  el proyecto activo ahora es null (bloquea el navbar)
+    window.dispatchEvent(new CustomEvent('proyecto-cambiado', { detail: null }))
+  } else {
+    // Si era otro diferente, LO ACTIVAMOS
+    sistemaSeleccionadoId.value = id
+    localStorage.setItem('proyecto_activo_id', String(id))
+    //nuevo ID seleccionado
+    window.dispatchEvent(new CustomEvent('proyecto-cambiado', { detail: id }))
+  }
+}
+
+/* =========================================================================
+ * CONTROL DE PERMISOS Y USUARIOS
+ * ========================================================================= */
 type PermissionCode = 1 | 2 | 3
 
-// Permiso actual del módulo Sistemas
-const currentPermission = inject<Ref<PermissionCode>>(
-  'currentPermission'
-)
-
+const currentPermission = inject<Ref<PermissionCode>>('currentPermission')
 const canWrite = computed(() => currentPermission?.value === 3)
 
-/* USUARIO AUTENTICADO */
 interface UserProfile {
   email: string
   name: string
@@ -42,45 +71,33 @@ if (sessionData) {
   currentUser.value = JSON.parse(sessionData)
 }
 
+const isAdmin = computed(() => currentUser.value?.roleName === 'Administrador')
 
-/* PERMISOS DEL ADMIN */
-// Por ahora mantenemos la regla establecida: solamente Administrador puede editar y eliminar.
-
-const isAdmin = computed(() => {
-  return currentUser.value?.roleName === 'Administrador'
-})
-
-/* SISTEMAS */
-
-/* IMPORTANTE:
- * "sistemas" proviene de: src/data/sistemas.ts, por lo tanto:
- * SistemaLista.vue
- * SistemaDetalle.vue
- * SistemaForm.vue
- * podrán trabajar sobre la misma fuente temporal.
- */
-
-
-
-/* ELIMINACION */
-// Sistema seleccionado para eliminar
+/* =========================================================================
+ * LÓGICA PARA ELIMINAR UN SISTEMA
+ * ========================================================================= */
 const sistemaAEliminar = ref<Sistema | null>(null)
 
-// Abrir modal de confirmación
 function confirmarEliminacion(sistema: Sistema) {
   if (!isAdmin.value) return
   sistemaAEliminar.value = sistema
 }
 
-// Eliminar definitivamente de la fuente temporal
 function eliminarSistema() {
   if (!sistemaAEliminar.value || !isAdmin.value) return
   const id = sistemaAEliminar.value.id
   eliminarSistemaDatos(id)
+  
+  // Si el sistema que acabamos de borrar era el que estaba seleccionado como activo, limpiamos la selección
+  if (sistemaSeleccionadoId.value === id) {
+    sistemaSeleccionadoId.value = null
+    localStorage.removeItem('proyecto_activo_id')
+    window.dispatchEvent(new CustomEvent('proyecto-cambiado', { detail: null }))
+  }
+
   sistemaAEliminar.value = null
 }
 
-// Cancelar eliminación
 function cancelarEliminacion() {
   sistemaAEliminar.value = null
 }
@@ -88,44 +105,36 @@ function cancelarEliminacion() {
 
 <template>
   <section class="lista-sistemas">
-
     <!-- ENCABEZADO -->
     <div class="list-header">
-      <!-- Agrupador principal de título e ícono a la izquierda -->
       <div class="header-main">
         <Monitor :size="38" class="header-icon" /> 
         <div class="header-text">
           <h2>Sistemas registrados</h2>
-          <p>
-            Consulta los sistemas registrados en el organizador.
-          </p>
+          <p>Consulta los sistemas registrados en el organizador.</p>
         </div>
       </div>
 
-      <!-- Acciones y total alineados a la derecha -->
       <div class="header-actions">
-
         <RouterLink v-if="canWrite" to="/portal/sistemas/nuevo" class="new-system-btn">
           <Plus :size="18" class="btn-icon" />
           <span>Nuevo sistema</span>
         </RouterLink>
 
         <div class="total-sistemas">
-          <span class="total-label">
-            Total
-          </span>
-          <span class="total-number">
-            {{ sistemas.length }}
-          </span>
+          <span class="total-label">Total</span>
+          <span class="total-number">{{ sistemas.length }}</span>
         </div>
       </div>
     </div>
 
-    <!-- TABLA -->
+    <!-- TABLA DE SISTEMAS -->
     <div class="table-container">
       <table class="sistemas-table">
         <thead>
           <tr>
+            <!-- Columna para la selección única -->
+            <th class="col-select">Activo</th>
             <th>ID</th>
             <th>Nombre</th>
             <th>Descripción</th>
@@ -140,29 +149,35 @@ function cancelarEliminacion() {
           <tr
             v-for="sistema in sistemas"
             :key="sistema.id"
+            :class="{ 'row-active': sistemaSeleccionadoId === sistema.id }"
           >
-            <!-- ID -->
-            <td>
-              <span class="id-badge">
-                #{{ sistema.id }}
-              </span>
+            <!-- CASILLA / CHECKBOX CUSTOM CON BOTÓN -->
+            <td class="col-select">
+              <button
+                type="button"
+                class="checkbox-box"
+                :class="{ 'is-checked': sistemaSeleccionadoId === sistema.id }"
+                @click="toggleProyecto(sistema.id)"
+                :title="sistemaSeleccionadoId === sistema.id ? 'Desactivar proyecto' : 'Activar proyecto'"
+              >
+                <!-- La palomita se dibuja sólo cuando la clase .is-checked está activa -->
+                <span class="checkmark-icon">✓</span>
+              </button>
             </td>
 
-            <!-- NOMBRE -->
+            <!-- DATOS DE LA TABLA -->
             <td>
-              <div class="nombre-sistema">
-                {{ sistema.nombre }}
-              </div>
+              <span class="id-badge">#{{ sistema.id }}</span>
             </td>
 
-            <!-- DESCRIPCIÓN -->
             <td>
-              <div class="descripcion">
-                {{ sistema.descripcion }}
-              </div>
+              <div class="nombre-sistema">{{ sistema.nombre }}</div>
             </td>
 
-            <!-- ESTADO -->
+            <td>
+              <div class="descripcion">{{ sistema.descripcion }}</div>
+            </td>
+
             <td>
               <span
                 class="estado-badge"
@@ -176,16 +191,10 @@ function cancelarEliminacion() {
               </span>
             </td>
 
-            <!-- RESPONSABLE -->
-            <td>
-              {{ sistema.responsable }}
-            </td>
-            <!-- FECHA -->
-            <td>
-              {{ sistema.fechaActualizacion }}
-            </td>
-            
-            <!-- ACCIONES REEMPLAZADAS POR ÍCONOS Y TOOLTIPS -->
+            <td>{{ sistema.responsable }}</td>
+            <td>{{ sistema.fechaActualizacion }}</td>
+
+            <!-- ACCIONES -->
             <td>
               <div class="acciones">
                 <RouterLink
@@ -196,7 +205,6 @@ function cancelarEliminacion() {
                   <Eye :size="15" />
                 </RouterLink>
 
-                <!-- EDITAR: Exclusivamente Administrador -->
                 <RouterLink
                   v-if="isAdmin"
                   :to="`/portal/sistemas/${sistema.id}/editar`"
@@ -206,7 +214,6 @@ function cancelarEliminacion() {
                   <Pencil :size="15" />
                 </RouterLink>
 
-                <!-- ELIMINAR: Exclusivamente Administrador -->
                 <button
                   v-if="isAdmin"
                   type="button"
@@ -222,19 +229,12 @@ function cancelarEliminacion() {
 
           <!-- SIN REGISTROS -->
           <tr v-if="sistemas.length === 0">
-            <td
-              colspan="7"
-              class="empty-state"
-            >
+            <td colspan="8" class="empty-state">
               <div class="empty-icon">
                 <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
               </div>
-              <h3>
-                No hay sistemas registrados
-              </h3>
-              <p>
-                Actualmente no existen sistemas para mostrar.
-              </p>
+              <h3>No hay sistemas registrados</h3>
+              <p>Actualmente no existen sistemas para mostrar.</p>
             </td>
           </tr>
         </tbody>
@@ -244,23 +244,11 @@ function cancelarEliminacion() {
     <!-- INFORMACIÓN INFERIOR -->
     <div class="list-footer">
       <div>
-        <strong>Nota:</strong>
-        Los datos mostrados actualmente son temporales
-        y se utilizan únicamente para el desarrollo de la interfaz.
+        <strong>Nota:</strong> Los datos mostrados actualmente son temporales.
       </div>
       <div class="permission-info">
-        <span
-          v-if="currentPermission === 2"
-          class="read-only-message"
-        >
-          Modo lectura
-        </span>
-        <span
-          v-else-if="currentPermission === 3"
-          class="write-message"
-        >
-          Acceso de escritura
-        </span>
+        <span v-if="currentPermission === 2" class="read-only-message">Modo lectura</span>
+        <span v-else-if="currentPermission === 3" class="write-message">Acceso de escritura</span>
       </div>
     </div>
 
@@ -274,34 +262,12 @@ function cancelarEliminacion() {
         <div class="modal-icon">
           <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
         </div>
-        <h3>
-          Eliminar sistema
-        </h3>
-        <p>
-          ¿Estás seguro de que deseas eliminar
-          <strong>
-            {{ sistemaAEliminar.nombre }}
-          </strong>?
-        </p>
-        <p class="modal-warning">
-          Esta acción eliminará temporalmente el registro
-          de la fuente de datos.
-        </p>
+        <h3>Eliminar sistema</h3>
+        <p>¿Estás seguro de que deseas eliminar <strong>{{ sistemaAEliminar.nombre }}</strong>?</p>
+        <p class="modal-warning">Esta acción eliminará temporalmente el registro.</p>
         <div class="modal-actions">
-          <button
-            type="button"
-            class="cancel-btn"
-            @click="cancelarEliminacion"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            class="confirm-delete-btn"
-            @click="eliminarSistema"
-          >
-            Eliminar
-          </button>
+          <button type="button" class="cancel-btn" @click="cancelarEliminacion">Cancelar</button>
+          <button type="button" class="confirm-delete-btn" @click="eliminarSistema">Eliminar</button>
         </div>
       </div>
     </div>
@@ -309,18 +275,16 @@ function cancelarEliminacion() {
 </template>
 
 <style scoped>
-
 .lista-sistemas {
   width: 100%;
   color: #5F0032;
 }
 
-
 /* ENCABEZADO */
 .list-header {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Distribuye el título a la izquierda y acciones a la derecha */
+  justify-content: space-between;
   gap: 20px;
   margin-bottom: 24px;
   flex-wrap: wrap;
@@ -333,9 +297,9 @@ function cancelarEliminacion() {
 }
 
 .header-icon {
-  color: #5F0032;      /* Mismo color guinda/vino de tu tema */
+  color: #5F0032;
   flex-shrink: 0;
-  stroke-width: 2;     /* Grosor de las líneas del ícono */
+  stroke-width: 2;
 }
 
 .header-text h2 {
@@ -351,10 +315,10 @@ function cancelarEliminacion() {
   font-size: 15px;
 }
 
-.header-actions { 
-  display: flex; 
-  align-items: center; 
-  gap: 14px; 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
 .total-sistemas {
@@ -383,35 +347,34 @@ function cancelarEliminacion() {
 }
 
 .new-system-btn {
-  display: inline-flex; 
-  align-items: center; 
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  gap: 6px; /*Espacio entre el ícono y el texto */
-  padding: 12px 22px; 
-  background: #99154E; 
+  gap: 6px;
+  padding: 12px 22px;
+  background: #99154E;
   color: #ffffff;
-  border-radius: 15px; 
+  border-radius: 15px;
   text-decoration: none;
-  font-size: 13px; 
-  font-weight: 700; 
+  font-size: 13px;
+  font-weight: 700;
   letter-spacing: 1px;
-  text-transform: uppercase; 
+  text-transform: uppercase;
   white-space: nowrap;
   transition: opacity 0.2s, transform 0.15s;
 }
 
-.btn-icon { /*Estilo para el icono de + de "nuevo sistema"*/
+.btn-icon {
   flex-shrink: 0;
-  stroke-width: 2.8; /* Le da más grosor al signo + de Lucide */
+  stroke-width: 2.8;
 }
 
-.new-system-btn:hover { 
-  opacity: 0.92; 
-  transform: translateY(-1px); 
+.new-system-btn:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
 }
 
-
-/* TABLA */
+/* TABLA Y COLUMNA SELECCIONADORA DE CASILLA */
 .table-container {
   width: 100%;
   overflow-x: auto;
@@ -449,10 +412,56 @@ function cancelarEliminacion() {
   vertical-align: middle;
 }
 
+.col-select {
+  text-align: center !important;
+  width: 60px;
+}
+
+/* ESTILOS DE LA CASILLA RECTANGULAR CON LA PALOMITA */
+.checkbox-box {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #5F0032;
+  border-radius: 6px;
+  background-color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  outline: none;
+}
+
+.checkbox-box:hover {
+  background-color: #FBEAF9;
+}
+
+.checkbox-box.is-checked {
+  background-color: #5F0032;
+  border-color: #5F0032;
+}
+
+.checkmark-icon {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  display: none;
+}
+
+/* Muestra la palomita únicamente cuando tiene la clase .is-checked */
+.checkbox-box.is-checked .checkmark-icon {
+  display: block;
+}
+
+.sistemas-table tbody tr.row-active {
+  background-color: #FBEAF9;
+}
+
 .sistemas-table tbody tr:hover {
   background-color: #FDF5FC;
 }
-
 
 /* DATOS */
 .id-badge {
@@ -476,7 +485,6 @@ function cancelarEliminacion() {
   color: #64748b;
   line-height: 1.4;
 }
-
 
 /* ESTADOS */
 .estado-badge {
@@ -503,8 +511,7 @@ function cancelarEliminacion() {
   color: #991b1b;
 }
 
-
-/* ACCIONES CON ÍCONOS COMPACTOS */
+/* ACCIONES CON ÍCONOS */
 .acciones {
   display: flex;
   gap: 6px;
@@ -556,7 +563,6 @@ function cancelarEliminacion() {
   transform: translateY(-1px);
 }
 
-
 /* ESTADO VACÍO */
 .empty-state {
   padding: 55px 20px !important;
@@ -579,7 +585,6 @@ function cancelarEliminacion() {
   color: #8a94a1;
   font-size: 12px;
 }
-
 
 /* PIE */
 .list-footer {
@@ -614,7 +619,6 @@ function cancelarEliminacion() {
   color: #2d5a1e;
   font-weight: 700;
 }
-
 
 /* MODAL */
 .modal-overlay {
@@ -704,18 +708,14 @@ function cancelarEliminacion() {
   background: #e88080;
 }
 
-
 /* RESPONSIVE */
 @media (max-width: 900px) {
-
   .table-container {
     overflow-x: auto;
   }
-
 }
 
 @media (max-width: 700px) {
-
   .list-header {
     align-items: flex-start;
     flex-direction: column;
@@ -733,7 +733,5 @@ function cancelarEliminacion() {
   .permission-info {
     white-space: normal;
   }
-
 }
-
 </style>
