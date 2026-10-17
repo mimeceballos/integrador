@@ -49,10 +49,10 @@ function closeUserMenu() {
   isUserMenuOpen.value = false
 }
 
-// Carga el estado inicial del proyecto desde localStorage
 function cargarProyectoActivo() {
-  const guardado = localStorage.getItem('proyecto_activo_id')
-  proyectoActivoId.value = guardado ? Number(guardado) : null
+  // Siempre iniciará sin proyecto seleccionado por defecto
+  proyectoActivoId.value = null
+  localStorage.removeItem('proyecto_activo_id')
 }
 
 // Callback que reacciona cada vez que SistemasView emite el evento 'proyecto-cambiado'

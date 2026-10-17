@@ -19,12 +19,10 @@ import type { Sistema } from '../../data/sistemas'
 // Guardamos el ID del sistema que está seleccionado actualmente. Si no hay ninguno, es null.
 const sistemaSeleccionadoId = ref<number | null>(null)
 
-// Cuando el componente se monta en pantalla, revisamos si ya había un proyecto guardado en localStorage
 onMounted(() => {
-  const guardado = localStorage.getItem('proyecto_activo_id')
-  if (guardado) {
-    sistemaSeleccionadoId.value = Number(guardado)
-  }
+  //  vacío al cargar esta vista
+  sistemaSeleccionadoId.value = null
+  localStorage.removeItem('proyecto_activo_id')
 })
 
 // Función para seleccionar/desmarcar un proyecto cuando se hace clic en la casilla
