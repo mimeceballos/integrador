@@ -2,7 +2,7 @@
 import { reactive, ref, computed, inject, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import type { Ref } from 'vue'
-import { ArrowLeft, X, Check } from 'lucide-vue-next' //Iconos de la libreria
+import { ArrowLeft, X, Check, Monitor } from 'lucide-vue-next'
 
 import {
   agregarSistema,
@@ -15,7 +15,6 @@ import {
 
 const route = useRoute()
 const router = useRouter()
-
 
 /* PERMISOS */
 type PermissionCode = 1 | 2 | 3
@@ -37,7 +36,6 @@ const sistemaId = computed(() =>
 const esEdicion = computed(() => sistemaId.value !== null)
 const noEncontrado = ref(false)
 
-
 /* OPCIONES PARA EL SELECT */
 const metodologias = [
   'Scrum',
@@ -49,8 +47,7 @@ const metodologias = [
 ]
 const estados = ['Activo', 'Desarrollo', 'Inactivo']
 
-
-/* -FORMULARIO */
+/* FORMULARIO */
 interface FormData {
   metodologia: string
   nombre: string
@@ -99,12 +96,10 @@ function cargarFormulario() {
     form.responsableApellidoPaterno = ''
     form.responsableApellidoMaterno = ''
 
-    //Para calcular las fechas
-    // 1. Asignar la fecha de hoy local en formato "YYYY-MM-DD"
+    // Para calcular las fechas
     const hoy: Date = new Date()
     form.fechaInicio = hoy.toLocaleDateString('sv-SE')
 
-    // 2. Crear fecha de fin sumándole 3 meses a la fecha actual
     const fechaFinCalculada: Date = new Date()
     fechaFinCalculada.setMonth(fechaFinCalculada.getMonth() + 3)
     form.fechaFin = fechaFinCalculada.toLocaleDateString('sv-SE')
@@ -124,7 +119,6 @@ function cargarFormulario() {
   form.descripcion = existente.descripcion
   form.estado = existente.estado
 
-  // Separar el nombre del responsable para los 4 nuevos campos en edición
   const partesNombre = (existente.responsable || '').split(' ')
   form.responsableNombre = partesNombre[0] || ''
   form.responsableApellidoPaterno = partesNombre[1] || ''
@@ -139,8 +133,7 @@ function cargarFormulario() {
 // Se vuelve a cargar si cambia entre /nuevo y /:id/editar
 watch(() => route.fullPath, cargarFormulario, { immediate: true })
 
-
-/* VALIDACION */
+/* VALIDACIÓN */
 function validate(): boolean {
   Object.keys(errors).forEach(k => delete errors[k as keyof FormData])
   let valid = true
@@ -193,13 +186,11 @@ function validate(): boolean {
   return valid
 }
 
-
 /* GUARDAR */
 function handleSubmit() {
   if (!canWrite.value || !validate()) return
   isSaving.value = true
 
-  // Concatenación del nombre completo
   const nombreCompletoResponsable = `${form.responsableNombre.trim()} ${form.responsableApellidoPaterno.trim()} ${form.responsableApellidoMaterno.trim()}`.trim()
 
   const datos = {
@@ -214,12 +205,10 @@ function handleSubmit() {
   }
 
   if (esEdicion.value) {
-    // fechaActualizacion se asigna sola dentro de actualizarSistema
     actualizarSistema(sistemaId.value as number, datos)
   } else {
     agregarSistema({
       ...datos,
-      // Campos que el formulario aún no pide
       departamento: 'No especificado',
       objetivo: 'Sin objetivo registrado.',
       presupuesto: 0,
@@ -239,12 +228,28 @@ function handleCancel() {
 <template>
   <section class="sistema-form">
 
-    <!-- REGRESAR CON ÍCONO DE LUCIDE -->
-    <div class="back-container">
-      <RouterLink to="/portal/sistemas" class="back-button">
-        <ArrowLeft :size="16" class="back-icon" />
-        Volver a sistemas
-      </RouterLink>
+    <!-- ENCABEZADO SUPERIOR (IGUAL QUE USUARIOS PERO SIN PROYECTO ACTIVO) -->
+    <div class="top-header">
+      
+      <!-- FILA SUPERIOR: ÍCONO, TÍTULO Y DESCRIPCIÓN -->
+      <div class="header-main-row">
+        <div class="header-info">
+          <Monitor :size="38" class="header-icon" />
+          <div class="header-text">
+            <h2>Sistemas registrados</h2>
+            <p>Consulta ls sistemas registrados en el organizador.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILA INFERIOR: BOTÓN DE REGRESAR UBICADO DEBAJO DEL ENCABEZADO -->
+      <div class="back-container">
+        <RouterLink to="/portal/sistemas" class="back-button">
+          <ArrowLeft :size="16" class="back-icon" />
+          Volver a sistemas
+        </RouterLink>
+      </div>
+
     </div>
 
     <!-- SIN PERMISO -->
@@ -315,8 +320,8 @@ function handleCancel() {
           <span v-if="errors.descripcion" class="error-text">{{ errors.descripcion }}</span>
         </div>
 
-        <!-- ESTADO -->
-        <div class="field field-full">
+        <!-- ESTADO (EN 1 COLUMNA COMPACTA PARA QUE FUNCIONE BIEN EL MENU) -->
+        <div class="field">
           <label for="estado">Estado</label>
           <select
             id="estado"
@@ -327,6 +332,9 @@ function handleCancel() {
           </select>
           <span v-if="errors.estado" class="error-text">{{ errors.estado }}</span>
         </div>
+
+        <!-- ESPACIO DE RELLENO -->
+        <div class="field-empty"></div>
 
         <!-- SECCIÓN: DATOS DEL RESPONSABLE -->
         <div class="section-divider field-full">
@@ -447,7 +455,6 @@ function handleCancel() {
   </section>
 </template>
 
-
 <style scoped>
 .sistema-form {
   width: 100%;
@@ -455,9 +462,51 @@ function handleCancel() {
   text-align: left;
 }
 
-/* REGRESAR */
+/* =========================================================================
+ * ESTILOS DEL ENCABEZADO SUPERIOR UNIFICADO
+ * ========================================================================= */
+.top-header {
+  margin-bottom: 22px;
+}
+
+.header-main-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon {
+  color: #5F0032;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
+.header-text h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #5F0032;
+}
+
+.header-text p {
+  margin: 4px 0 0 0;
+  color: #6c7886;
+  font-size: 15px;
+}
+
+/* BOTÓN REGRESAR COLOCADO ABAJO DEL ENCABEZADO */
 .back-container {
-  margin-bottom: 18px;
+  display: flex;
+  justify-content: flex-start;
 }
 
 .back-button {
@@ -473,6 +522,7 @@ function handleCancel() {
   font-size: 12px;
   font-weight: 700;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .back-button:hover {
@@ -484,7 +534,6 @@ function handleCancel() {
   flex-shrink: 0;
   stroke-width: 2.5;
 }
-
 
 /* TARJETAS */
 .form-card,
@@ -514,8 +563,7 @@ function handleCancel() {
   font-size: 14px;
 }
 
-
-/* ENCABEZADO */
+/* ENCABEZADO DEL FORMULARIO */
 .form-header {
   margin-bottom: 26px;
 }
@@ -535,7 +583,6 @@ function handleCancel() {
   font-size: 13px;
 }
 
-
 /* SECCIONES EN EL FORMULARIO */
 .section-divider {
   margin-top: 12px;
@@ -552,7 +599,6 @@ function handleCancel() {
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
-
 
 /* CAMPOS EN GRID COMPACTO */
 .form-grid {
@@ -576,6 +622,10 @@ function handleCancel() {
   grid-column: span 2;
 }
 
+.field-empty {
+  grid-column: span 2;
+}
+
 .field label {
   margin-bottom: 6px;
   color: #555151;
@@ -583,8 +633,8 @@ function handleCancel() {
   font-weight: 500;
 }
 
+/* INPUTS Y TEXTAREAS */
 .field input,
-.field select,
 .field textarea {
   font: inherit;
   font-size: 15px;
@@ -598,13 +648,31 @@ function handleCancel() {
   transition: border-color 0.2s;
 }
 
-/* REGLAS CSS PARA FORZAR LA VISIBILIDAD DEL ÍCONO DE CALENDARIO */
+/* SELECTS COMPACTOS CON CAJA DE BORDES SUAVES */
+.field select {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1.5px solid #4D6787;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #1a1a1a;
+  outline: none;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.field select:focus {
+  border-color: #D46D25;
+}
+
+/* REGLAS CSS PARA EL ÍCONO DE CALENDARIO */
 .field input[type="date"].date-input {
   position: relative;
   cursor: pointer;
 }
 
-/* Estilo explícito para el ícono nativo del selector de fecha */
 .field input[type="date"]::-webkit-calendar-picker-indicator {
   display: block;
   background-position: center;
@@ -625,13 +693,12 @@ function handleCancel() {
 }
 
 .field input:focus,
-.field select:focus,
 .field textarea:focus {
   border-bottom-color: #D46D25;
 }
 
 .field .invalid {
-  border-bottom-color: #D46D25;
+  border-color: #D46D25 !important;
 }
 
 .field .readonly {
@@ -651,7 +718,6 @@ function handleCancel() {
   color: #8a94a1;
   font-size: 12px;
 }
-
 
 /* BOTONES */
 .form-actions {
@@ -706,7 +772,6 @@ function handleCancel() {
   cursor: not-allowed;
 }
 
-
 /* RESPONSIVE */
 @media (max-width: 992px) {
   .form-grid {
@@ -715,6 +780,10 @@ function handleCancel() {
 
   .field-span-2 {
     grid-column: span 1;
+  }
+
+  .field-empty {
+    display: none;
   }
 }
 

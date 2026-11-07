@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, provide, type Component } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { LogOut, Monitor, Users, ShieldCheck, BookOpen } from 'lucide-vue-next'
+import { LogOut, Monitor, Users, BookOpen } from 'lucide-vue-next'
 
 // Importamos los datos compartidos de los sistemas
 import { sistemas } from '../data/sistemas'
@@ -50,9 +50,12 @@ function closeUserMenu() {
 }
 
 function cargarProyectoActivo() {
-  // Siempre iniciará sin proyecto seleccionado por defecto
-  proyectoActivoId.value = null
-  localStorage.removeItem('proyecto_activo_id')
+  const idGuardado = localStorage.getItem('proyecto_activo_id')
+  if (idGuardado) {
+    proyectoActivoId.value = Number(idGuardado)
+  } else {
+    proyectoActivoId.value = null
+  }
 }
 
 // Callback que reacciona cada vez que SistemasView emite el evento 'proyecto-cambiado'
@@ -111,14 +114,12 @@ const menuItems = computed<MenuItem[]>(() => {
   const perms = currentUser.value?.permissions || {
     sistemas: 1,
     usuarios: 1,
-    roles: 1,
     historias: 1
   }
 
   const baseItems = [
     { key: 'sistemas', name: 'Sistemas', route: '/portal/sistemas', level: perms.sistemas, icon: Monitor, requiresProject: false },
     { key: 'usuarios', name: 'Usuarios', route: '/portal/usuarios', level: perms.usuarios, icon: Users, requiresProject: true },
-    { key: 'roles', name: 'Roles', route: '/portal/roles', level: perms.roles, icon: ShieldCheck, requiresProject: true },
     { key: 'historias', name: 'Historias', route: '/portal/historias', level: perms.historias, icon: BookOpen, requiresProject: true }
   ]
 
@@ -132,7 +133,7 @@ const menuItems = computed<MenuItem[]>(() => {
       }
     }
 
-    // 2. Si NO hay ningún proyecto activo seleccionado -> Se bloquean Usuarios, Roles e Historias
+    // 2. Si NO hay ningún proyecto activo seleccionado -> Se bloquean Usuarios e Historias
     if (!proyectoActivo.value) {
       return {
         ...item,
@@ -164,14 +165,6 @@ function handleLogout() {
     <aside class="sidebar">
       <div class="brand">
         <h2>OPCIONES</h2>
-        
-        <!-- MUESTRA EL PROYECTO QUE ESTÁ SELECCIONADO ACTUALMENTE -->
-        <div class="active-project-indicator" :class="{ 'none': !proyectoActivo }">
-          <span class="indicator-label">PROYECTO ACTIVO:</span>
-          <span class="indicator-name" :title="proyectoActivo ? proyectoActivo.nombre : 'Ninguno'">
-            {{ proyectoActivo ? proyectoActivo.nombre : 'Ninguno' }}
-          </span>
-        </div>
       </div>
 
       <!-- MENÚ DE NAVEGACIÓN -->
@@ -457,51 +450,12 @@ function handleLogout() {
 }
 
 .brand h2 {
-  margin: 0 0 12px;
+  margin: 0 0 24px;
   font-size: 18px;
   font-weight: 800;
   letter-spacing: 1.5px;
   color: #E8F9A2;
   text-transform: uppercase;
-  text-align: center;
-}
-
-.active-project-indicator {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(232, 249, 162, 0.3);
-  padding: 8px 12px;
-  border-radius: 10px;
-  margin-bottom: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.active-project-indicator.none {
-  border-color: rgba(254, 226, 226, 0.3);
-}
-
-.indicator-label {
-  font-size: 9px;
-  color: #E8F9A2;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-}
-
-.active-project-indicator.none .indicator-label {
-  color: #fca5a5;
-}
-
-.indicator-name {
-  font-size: 12px;
-  font-weight: 700;
-  color: #ffffff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
   text-align: center;
 }
 

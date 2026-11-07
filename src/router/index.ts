@@ -2,11 +2,15 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LogIn from '../components/LogIn.vue' 
 import inicio from '../views/inicio.vue' 
 
-import historias from '../views/principal/Historias.vue'
-import roles from '../views/principal/Roles.vue'
-import usuarios from '../views/principal/Usuarios.vue'
+// NUEVO: Importación de los componentes de Historias de Usuario desde src/historias/
+import HistoriaLista from '../components/historias/HistoriaLista.vue'
+import HistoriaForm from '../components/historias/HistoriaForm.vue'
 
-// Componentes de Sistemas
+// Importación de los componentes de usuarios desde src/components/usuarios/
+import UsuarioLista from '../components/usuarios/UsuarioLista.vue'
+import UsuarioForm from '../components/usuarios/UsuarioForm.vue'
+
+// Importación de los componentes de sistemas desde src/components/sistemas/
 import SistemaLista from '../components/sistemas/SistemaLista.vue'
 import SistemaDetalle from '../components/sistemas/SistemaDetalle.vue'
 import SistemaForm from '../components/sistemas/SistemaForm.vue'
@@ -20,18 +24,54 @@ const routes = [
     name: 'portal', 
     component: inicio, 
     children: [
-      // Al entrar a /admin, redirige directo a la lista de sistemas
+      // Al entrar a /portal, redirige directo a la lista de sistemas
       {
         path: '',
         redirect: '/portal/sistemas'
       },
 
-      // Módulos de tus compañeros
-      { path: 'historias', name: 'historias', component: historias },
-      { path: 'roles', name: 'roles', component: roles },
-      { path: 'usuarios', name: 'usuarios', component: usuarios },
+      /* =========================================================================
+       * RUTAS DEL MÓDULO DE HISTORIAS DE USUARIO
+       * Gestiona la visualización del listado, creación y edición
+       * ========================================================================= */
+      { 
+        path: 'historias', 
+        name: 'historias-lista', 
+        component: HistoriaLista 
+      },
+      {
+        path: 'historias/nuevo',
+        name: 'historias-nuevo',
+        component: HistoriaForm
+      },
+      {
+        path: 'historias/:id/editar',
+        name: 'historias-editar',
+        component: HistoriaForm
+      },
 
-      // RUTAS DIRECTAS DE SISTEMAS (sin necesidad de Sistemas.vue)
+      /* =========================================================================
+       * RUTAS DEL MÓDULO DE USUARIOS
+       * ========================================================================= */
+      { 
+        path: 'usuarios', 
+        name: 'usuarios', 
+        component: UsuarioLista 
+      },
+      {
+        path: 'usuarios/nuevo',
+        name: 'usuarios-nuevo',
+        component: UsuarioForm
+      },
+      {
+        path: 'usuarios/:id/editar',
+        name: 'usuarios-editar',
+        component: UsuarioForm
+      },
+
+      /* =========================================================================
+       * RUTAS DEL MÓDULO DE SISTEMAS
+       * ========================================================================= */
       {
         path: 'sistemas',
         name: 'sistemas-lista',

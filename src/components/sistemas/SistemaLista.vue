@@ -20,9 +20,25 @@ import type { Sistema } from '../../data/sistemas'
 const sistemaSeleccionadoId = ref<number | null>(null)
 
 onMounted(() => {
-  //  vacío al cargar esta vista
-  sistemaSeleccionadoId.value = null
-  localStorage.removeItem('proyecto_activo_id')
+  /* =========================================================================
+   * SINCRONIZACIÓN DE SELECCIÓN EN LA LISTA Y LIMPIEZA DE EVENTO GLOBAL
+   * Al cargar la tabla de sistemas, leemos si ya había un proyecto seleccionado.
+   * Si no hay ninguno, notificamos a inicio.vue para mantener el navbar bloqueado.
+   * ========================================================================= */
+  const idGuardado = localStorage.getItem('proyecto_activo_id')
+  if (idGuardado) {
+    sistemaSeleccionadoId.value = Number(idGuardado)
+  } else {
+    sistemaSeleccionadoId.value = null
+    window.dispatchEvent(new CustomEvent('proyecto-cambiado', { detail: null }))
+  }
+})
+
+// Obtenemos el nombre del proyecto seleccionado dinámicamente
+const nombreProyectoActivo = computed(() => {
+  if (!sistemaSeleccionadoId.value) return 'Ninguno'
+  const sistema = sistemas.value.find(s => s.id === sistemaSeleccionadoId.value)
+  return sistema ? sistema.nombre : 'Ninguno'
 })
 
 // Función para seleccionar/desmarcar un proyecto cuando se hace clic en la casilla
@@ -31,13 +47,13 @@ function toggleProyecto(id: number) {
   if (sistemaSeleccionadoId.value === id) {
     sistemaSeleccionadoId.value = null
     localStorage.removeItem('proyecto_activo_id')
-    //  el proyecto activo ahora es null (bloquea el navbar)
+    // El proyecto activo ahora es null (bloquea el navbar)
     window.dispatchEvent(new CustomEvent('proyecto-cambiado', { detail: null }))
   } else {
     // Si era otro diferente, LO ACTIVAMOS
     sistemaSeleccionadoId.value = id
     localStorage.setItem('proyecto_activo_id', String(id))
-    //nuevo ID seleccionado
+    // Nuevo ID seleccionado
     window.dispatchEvent(new CustomEvent('proyecto-cambiado', { detail: id }))
   }
 }
@@ -114,11 +130,19 @@ function cancelarEliminacion() {
       </div>
 
       <div class="header-actions">
+        <!-- 1. BOTÓN DE NUEVO SISTEMA -->
         <RouterLink v-if="canWrite" to="/portal/sistemas/nuevo" class="new-system-btn">
           <Plus :size="18" class="btn-icon" />
           <span>Nuevo sistema</span>
         </RouterLink>
 
+        <!-- 2. RECUADRO DEL PROYECTO ACTIVO EN EL MEDIO -->
+        <div class="proyecto-activo-card" :class="{ 'sin-seleccion': !sistemaSeleccionadoId }">
+          <span class="proyecto-label">Proyecto activo</span>
+          <span class="proyecto-nombre">{{ nombreProyectoActivo }}</span>
+        </div>
+
+        <!-- 3. TOTAL DE SISTEMAS A LA DERECHA -->
         <div class="total-sistemas">
           <span class="total-label">Total</span>
           <span class="total-number">{{ sistemas.length }}</span>
@@ -136,6 +160,7 @@ function cancelarEliminacion() {
             <th>ID</th>
             <th>Nombre</th>
             <th>Descripción</th>
+            <th>Metodología</th>
             <th>Estado</th>
             <th>Responsable</th>
             <th>Fecha actualización</th>
@@ -158,7 +183,6 @@ function cancelarEliminacion() {
                 @click="toggleProyecto(sistema.id)"
                 :title="sistemaSeleccionadoId === sistema.id ? 'Desactivar proyecto' : 'Activar proyecto'"
               >
-                <!-- La palomita se dibuja sólo cuando la clase .is-checked está activa -->
                 <span class="checkmark-icon">✓</span>
               </button>
             </td>
@@ -174,6 +198,12 @@ function cancelarEliminacion() {
 
             <td>
               <div class="descripcion">{{ sistema.descripcion }}</div>
+            </td>
+
+            <td>
+              <div class="metodologia-sistema">
+                {{ sistema.metodologia || 'No especificada' }}
+              </div>
             </td>
 
             <td>
@@ -227,7 +257,7 @@ function cancelarEliminacion() {
 
           <!-- SIN REGISTROS -->
           <tr v-if="sistemas.length === 0">
-            <td colspan="8" class="empty-state">
+            <td colspan="9" class="empty-state">
               <div class="empty-icon">
                 <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
               </div>
@@ -317,6 +347,46 @@ function cancelarEliminacion() {
   display: flex;
   align-items: center;
   gap: 14px;
+}
+
+/* RECUADRO DEL PROYECTO ACTIVO EN EL MEDIO */
+.proyecto-activo-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 9px 18px;
+  background: #FBEAF9;
+  border: 1px solid #F0CBEC;
+  border-radius: 12px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.proyecto-activo-card.sin-seleccion {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.proyecto-label {
+  color: #7d8794;
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.proyecto-nombre {
+  color: #5F0032;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.proyecto-activo-card.sin-seleccion .proyecto-nombre {
+  color: #94a3b8;
+  font-style: italic;
 }
 
 .total-sistemas {
@@ -448,7 +518,6 @@ function cancelarEliminacion() {
   display: none;
 }
 
-/* Muestra la palomita únicamente cuando tiene la clase .is-checked */
 .checkbox-box.is-checked .checkmark-icon {
   display: block;
 }
@@ -482,6 +551,12 @@ function cancelarEliminacion() {
   max-width: 260px;
   color: #64748b;
   line-height: 1.4;
+}
+
+.metodologia-sistema {
+  min-width: 130px;
+  color: #334155;
+  font-weight: 600;
 }
 
 /* ESTADOS */
@@ -719,8 +794,8 @@ function cancelarEliminacion() {
     flex-direction: column;
   }
 
-  .total-sistemas {
-    align-self: flex-end;
+  .header-actions {
+    flex-wrap: wrap;
   }
 
   .list-footer {
