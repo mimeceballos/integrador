@@ -4,16 +4,13 @@ import { RouterLink } from 'vue-router'
 import type { Ref } from 'vue'
 import { Users, Plus, Pencil, UserX } from 'lucide-vue-next'
 
-/* =========================================================================
- * IMPORTACIÓN DE LA LISTA GLOBAL REACTIVA DE USUARIOS Y SISTEMAS
- * ========================================================================= */
+import HeaderStatsCard from '../../components/Encabezado.vue'
+import ListFooter from '../../components/Footer.vue'
+
 import { usuarios } from '../../data/usuarios'
 import type { Usuario } from '../../data/usuarios'
 import { sistemas } from '../../data/sistemas'
-
-/* =========================================================================
- * OBTENER PROYECTO ACTIVO
- * ========================================================================= */
+/* PROYECTO ACTIVO */
 const proyectoActivoId = ref<number | null>(
   localStorage.getItem('proyecto_activo_id')
     ? Number(localStorage.getItem('proyecto_activo_id'))
@@ -28,13 +25,16 @@ const nombreProyectoActivo = computed<string>(() => {
   return proyectoActivo.value?.nombre || ''
 })
 
-/* =========================================================================
- * CONTROL DE PERMISOS Y ROL DE SESIÓN
- * ========================================================================= */
+/* PERMISOS Y SESIÓN */
 type PermissionCode = 1 | 2 | 3
+// Inyectamos la clave específica del módulo "historias" provista en el Layout/Padre
+const permisoUsuarios = inject<Ref<PermissionCode>>('permisoUsuarios')
 
-const currentPermission = inject<Ref<PermissionCode>>('currentPermission')
-const canWrite = computed(() => currentPermission?.value === 3)
+// Permiso de lectura: Permite ver el módulo si el valor es 2 o 3
+//const canRead = computed(() => (permisoUsuarios?.value ?? 1) >= 2)
+
+// Permiso de escritura: Habilita crear, editar, ocultar y restaurar si es 3
+const canWrite = computed(() => permisoUsuarios?.value === 3)
 
 interface UserProfile {
   email: string
@@ -49,20 +49,17 @@ if (sessionData) {
   currentUser.value = JSON.parse(sessionData)
 }
 
-const isAdmin = computed(() => currentUser.value?.roleName === 'Administrador')
 
-/* =========================================================================
- * LÓGICA PARA DESACTIVAR / TOGGLE ESTADO DE UN USUARIO
- * ========================================================================= */
+/* ESTADO DE USUARIO */
 const usuarioADesactivar = ref<Usuario | null>(null)
 
 function confirmarDesactivacion(usuario: Usuario) {
-  if (!isAdmin.value) return
+  if (!canWrite.value) return
   usuarioADesactivar.value = usuario
 }
 
 function alternarEstadoUsuario() {
-  if (!usuarioADesactivar.value || !isAdmin.value) return
+  if (!usuarioADesactivar.value || !canWrite.value) return
   
   usuarioADesactivar.value.activo = !usuarioADesactivar.value.activo
   usuarioADesactivar.value = null
@@ -75,7 +72,7 @@ function cancelarDesactivacion() {
 
 <template>
   <section class="lista-usuarios">
-    <!-- ENCABEZADO DE LA VISTA -->
+    <!-- ENCABEZADO COMPLETAMENTE ALINEADO CON LA TABLA -->
     <div class="list-header">
       <div class="header-main">
         <Users :size="38" class="header-icon" /> 
@@ -86,23 +83,16 @@ function cancelarDesactivacion() {
       </div>
 
       <div class="header-actions">
-        <!-- 1. BOTÓN DE NUEVO USUARIO -->
+        <HeaderStatsCard 
+          :nombreProyecto="nombreProyectoActivo"
+          :metodologia="proyectoActivo?.metodologia"
+          :totalCount="usuarios.length"
+        />
+        
         <RouterLink v-if="canWrite" to="/portal/usuarios/nuevo" class="new-user-btn">
           <Plus :size="18" class="btn-icon" />
           <span>Nuevo usuario</span>
         </RouterLink>
-
-        <!-- 2. TARJETA DEL PROYECTO ACTIVO (EN MEDIO, A LA IZQUIERDA DEL CONTEO) -->
-        <div class="proyecto-activo-card">
-          <span class="proyecto-label">Proyecto activo</span>
-          <span class="proyecto-nombre">{{ nombreProyectoActivo }}</span>
-        </div>
-
-        <!-- 3. TOTAL DE USUARIOS (EXTREMO DERECHO) -->
-        <div class="total-usuarios">
-          <span class="total-label">Total</span>
-          <span class="total-number">{{ usuarios.length }}</span>
-        </div>
       </div>
     </div>
 
@@ -111,10 +101,10 @@ function cancelarDesactivacion() {
       <table class="usuarios-table">
         <thead>
           <tr>
-            <th class="col-id">ID</th>
-            <th>Email</th>
-            <th>Nombre Completo</th>
-            <th>Rol (Metodología)</th>
+            <th class="col-center">ID</th>
+            <th class="col-center">Email</th>
+            <th class="col-center">Nombre Completo</th>
+            <th class="col-center">Rol (Metodología)</th>
             <th class="col-center">Estado</th>
             <th class="col-center">Acciones</th>
           </tr>
@@ -126,29 +116,24 @@ function cancelarDesactivacion() {
             :key="usuario.id"
             :class="{ 'row-inactive': !usuario.activo }"
           >
-            <!-- 1. ID -->
             <td class="col-id">
               <span class="id-badge">#{{ usuario.id }}</span>
             </td>
 
-            <!-- 2. EMAIL -->
             <td>
               <div class="email-usuario">{{ usuario.email }}</div>
             </td>
 
-            <!-- 3. NOMBRE COMPLETO -->
             <td>
               <div class="nombre-usuario">{{ usuario.nombreCompleto }}</div>
             </td>
 
-            <!-- 4. ROL (METODOLOGÍA) -->
             <td>
               <span class="rol-badge">
                 {{ usuario.rolMetodologia }}
               </span>
             </td>
 
-            <!-- ESTADO (ACTIVO / INACTIVO) -->
             <td class="col-center">
               <span
                 class="estado-badge"
@@ -158,11 +143,10 @@ function cancelarDesactivacion() {
               </span>
             </td>
 
-            <!-- 5. ACCIONES -->
             <td class="col-center">
               <div class="acciones">
                 <RouterLink
-                  v-if="isAdmin"
+                  v-if="canWrite"
                   :to="`/portal/usuarios/${usuario.id}/editar`"
                   class="action-btn edit-btn"
                   title="Editar usuario"
@@ -171,7 +155,7 @@ function cancelarDesactivacion() {
                 </RouterLink>
 
                 <button
-                  v-if="isAdmin"
+                  v-if="canWrite"
                   type="button"
                   class="action-btn deactivate-btn"
                   :class="{ 'reactivate-btn': !usuario.activo }"
@@ -184,7 +168,6 @@ function cancelarDesactivacion() {
             </td>
           </tr>
 
-          <!-- SIN REGISTROS -->
           <tr v-if="usuarios.length === 0">
             <td colspan="6" class="empty-state">
               <div class="empty-icon">
@@ -198,16 +181,11 @@ function cancelarDesactivacion() {
       </table>
     </div>
 
-    <!-- INFORMACIÓN INFERIOR -->
-    <div class="list-footer">
-      <div>
-        <strong>Nota:</strong> Los roles mostrados corresponden a la metodología de desarrollo activa.
-      </div>
-      <div class="permission-info">
-        <span v-if="currentPermission === 2" class="read-only-message">Modo lectura</span>
-        <span v-else-if="currentPermission === 3" class="write-message">Acceso de escritura</span>
-      </div>
-    </div>
+    <!-- PIE DE PÁGINA -->
+    <ListFooter 
+      nota="Los roles mostrados corresponden a la metodología de desarrollo activa."
+      :currentPermission="permisoUsuarios"
+    />
 
     <!-- MODAL DE CONFIRMACIÓN -->
     <div
@@ -246,7 +224,6 @@ function cancelarDesactivacion() {
   color: #5F0032;
 }
 
-/* ENCABEZADO */
 .list-header {
   display: flex;
   align-items: center;
@@ -287,60 +264,6 @@ function cancelarDesactivacion() {
   gap: 14px;
 }
 
-.total-usuarios {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 70px;
-  padding: 9px 15px;
-  background: #FBEAF9;
-  border: 1px solid #F0CBEC;
-  border-radius: 12px;
-}
-
-.total-label {
-  color: #7d8794;
-  font-size: 10px;
-  text-transform: uppercase;
-  font-weight: 700;
-}
-
-.total-number {
-  color: #5F0032;
-  font-size: 22px;
-  font-weight: 800;
-}
-
-/* RECUADRO DEL PROYECTO ACTIVO EN EL MEDIO */
-.proyecto-activo-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 9px 18px;
-  background: #FBEAF9;
-  border: 1px solid #F0CBEC;
-  border-radius: 12px;
-  white-space: nowrap;
-}
-
-.proyecto-label {
-  color: #7d8794;
-  font-size: 10px;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-bottom: 2px;
-}
-
-.proyecto-nombre {
-  color: #5F0032;
-  font-size: 15px;
-  font-weight: 800;
-}
-
 .new-user-btn {
   display: inline-flex;
   align-items: center;
@@ -369,7 +292,6 @@ function cancelarDesactivacion() {
   transform: translateY(-1px);
 }
 
-/* TABLA Y CONTENEDOR */
 .table-container {
   width: 100%;
   overflow-x: auto;
@@ -407,7 +329,6 @@ function cancelarDesactivacion() {
   vertical-align: middle;
 }
 
-/* DISTRIBUCIÓN FLUIDA */
 .col-id {
   width: 60px;
 }
@@ -425,7 +346,6 @@ function cancelarDesactivacion() {
   background-color: #FDF5FC;
 }
 
-/* DATOS DE TABLA */
 .id-badge {
   display: inline-block;
   padding: 4px 7px;
@@ -475,7 +395,6 @@ function cancelarDesactivacion() {
   color: #991b1b;
 }
 
-/* ACCIONES */
 .acciones {
   display: flex;
   gap: 6px;
@@ -527,7 +446,6 @@ function cancelarDesactivacion() {
   background: #c7e6a3;
 }
 
-/* ESTADO VACÍO */
 .empty-state {
   padding: 55px 20px !important;
   text-align: center !important;
@@ -550,41 +468,6 @@ function cancelarDesactivacion() {
   font-size: 12px;
 }
 
-/* PIE DE PÁGINA */
-.list-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-  margin-top: 15px;
-  padding: 11px 14px;
-  border-radius: 99px;
-  background: #fafafa;
-  color: #8a94a1;
-  font-size: 10px;
-}
-
-.permission-info {
-  white-space: nowrap;
-}
-
-.read-only-message {
-  padding: 4px 8px;
-  border-radius: 5px;
-  background: #fef3c7;
-  color: #92400e;
-  font-weight: 700;
-}
-
-.write-message {
-  padding: 4px 8px;
-  border-radius: 5px;
-  background: #d9efbd;
-  color: #2d5a1e;
-  font-weight: 700;
-}
-
-/* MODAL */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -671,7 +554,6 @@ function cancelarDesactivacion() {
   background: #e88080;
 }
 
-/* RESPONSIVE */
 @media (max-width: 700px) {
   .list-header {
     align-items: flex-start;
@@ -680,11 +562,6 @@ function cancelarDesactivacion() {
 
   .header-actions {
     flex-wrap: wrap;
-  }
-
-  .list-footer {
-    align-items: flex-start;
-    flex-direction: column;
   }
 }
 </style>

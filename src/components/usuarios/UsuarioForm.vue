@@ -4,15 +4,15 @@ import { useRoute, useRouter, RouterLink } from 'vue-router'
 import type { Ref } from 'vue'
 import { ArrowLeft, X, Check, Users } from 'lucide-vue-next'
 
-// Importamos la lista global de sistemas para obtener los datos del proyecto activo
+// Componente 
+import HeaderStatsCard from '../../components/Encabezado.vue'
+
+//lista de sistemas para datos estáticos
 import { sistemas } from '../../data/sistemas'
 
-/* =========================================================================
- * CONEXIÓN CON EL ARCHIVO CENTRAL DE DATOS (usuarios.ts)
- * Importamos las funciones del CRUD simplificado para consultar, guardar
- * y actualizar usuarios en la lista global en memoria.
- * ========================================================================= */
+/* (usuarios.ts) */
 import {
+  usuarios,
   agregarUsuario,
   actualizarUsuario,
   obtenerUsuario
@@ -21,9 +21,7 @@ import {
 const route = useRoute()
 const router = useRouter()
 
-/* =========================================================================
- * PERMISOS DE SESIÓN
- * ========================================================================= */
+/*PERMISOS DE SESIÓN */
 type PermissionCode = 1 | 2 | 3
 
 const currentPermission = inject<Ref<PermissionCode>>('currentPermission')
@@ -31,10 +29,8 @@ const currentPermission = inject<Ref<PermissionCode>>('currentPermission')
 // Solo el permiso 3 (Escritura) permite crear o editar usuarios
 const canWrite = computed(() => currentPermission?.value === 3)
 
-/* =========================================================================
- * RECUPERAR EL PROYECTO ACTIVO Y SUS DATOS
- * Leemos el ID guardado en localStorage para saber en qué sistema estamos
- * ========================================================================= */
+/* RECUPERAR EL PROYECTO ACTIVO Y SUS DATOS
+ * se lee el ID guardado en localStorage para saber en qué sistema estamos */
 const proyectoActivoId = ref<number | null>(
   localStorage.getItem('proyecto_activo_id')
     ? Number(localStorage.getItem('proyecto_activo_id'))
@@ -56,9 +52,7 @@ const nombreProyectoActivo = computed<string>(() => {
   return proyectoActivo.value ? proyectoActivo.value.nombre : ''
 })
 
-/* =========================================================================
- * CATÁLOGO DE ROLES POR METODOLOGÍA
- * ========================================================================= */
+/* CATÁLOGO DE ROLES POR METODOLOGÍA */
 const rolesPorMetodologia: Record<string, string[]> = {
   'XP (Extreme Programming)': [
     'Cliente (Customer)',
@@ -97,23 +91,19 @@ const rolesPorMetodologia: Record<string, string[]> = {
   ]
 }
 
-// Genera automáticamente los roles filtrados únicamente para la metodología del proyecto activo
+// Genera los roles filtrados para la metodología del proyecto activo
 const rolesDisponibles = computed<string[]>(() => {
   return rolesPorMetodologia[metodologiaProyecto.value] || []
 })
 
-/* =========================================================================
- * MODO: NUEVO O EDICIÓN
- * ========================================================================= */
+/* MODO: NUEVO O EDICIÓN*/
 const usuarioId = computed(() =>
   route.params.id ? Number(route.params.id) : null
 )
 const esEdicion = computed(() => usuarioId.value !== null)
 const noEncontrado = ref(false)
 
-/* =========================================================================
- * ESTRUCTURA Y ESTADO DEL FORMULARIO
- * ========================================================================= */
+/* ESTRUCTURA DEL FORMULARIO*/
 interface FormData {
   email: string
   nombre: string
@@ -129,15 +119,13 @@ const form = reactive<FormData>({
   apellidoPaterno: '',
   apellidoMaterno: '',
   rolMetodologia: '',
-  activo: true // Marcado automáticamente para crearse como "Activo"
+  activo: true 
 })
 
 const errors = reactive<Partial<Record<keyof FormData, string>>>({})
 const isSaving = ref(false)
 
-/* =========================================================================
- * CARGA DE DATOS DEL FORMULARIO
- * ========================================================================= */
+/* CARGA DE DATOS DEL FORMULARIO */
 function cargarFormulario() {
   noEncontrado.value = false
   Object.keys(errors).forEach(k => delete errors[k as keyof FormData])
@@ -152,10 +140,6 @@ function cargarFormulario() {
     return
   }
 
-  /* =========================================================================
-   * CARGA EN MODO EDICIÓN
-   * Buscamos al usuario en usuarios.ts con 'obtenerUsuario' usando su ID.
-   * ========================================================================= */
   const existente = obtenerUsuario(usuarioId.value as number)
   if (!existente) {
     noEncontrado.value = true
@@ -175,9 +159,7 @@ function cargarFormulario() {
 
 watch(() => route.fullPath, cargarFormulario, { immediate: true })
 
-/* =========================================================================
- * VALIDACIÓN
- * ========================================================================= */
+/* VALIDACIÓN */
 function validate(): boolean {
   Object.keys(errors).forEach(k => delete errors[k as keyof FormData])
   let valid = true
@@ -208,9 +190,7 @@ function validate(): boolean {
   return valid
 }
 
-/* =========================================================================
- * GUARDAR USUARIO (CONECTADO A USUARIOS.TS)
- * ========================================================================= */
+/* GUARDAR USUARIO (CONECTADO A USUARIOS.TS)*/
 function handleSubmit() {
   if (!canWrite.value || !validate()) return
   isSaving.value = true
@@ -243,10 +223,9 @@ function handleCancel() {
 <template>
   <section class="usuario-form">
 
-    <!-- ENCABEZADO SUPERIOR REDISEÑADO -->
+    <!-- ENCABEZADO SUPERIOR -->
     <div class="top-header">
-      
-      <!-- FILA SUPERIOR: ÍCONO, TÍTULO Y DESCRIPCIÓN A LA IZQUIERDA; PROYECTO ACTIVO Y METODOLOGÍA A LA DERECHA -->
+      <!-- FILA SUPERIOR: ÍCONO, TÍTULO, DESCRIPCIÓN Y TARJETAS ESTADÍSTICAS -->
       <div class="header-main-row">
         <div class="header-info">
           <Users :size="38" class="header-icon" />
@@ -256,17 +235,15 @@ function handleCancel() {
           </div>
         </div>
 
-        <!-- RECUADRO CON "PROYECTO ACTIVO" Y "METODOLOGÍA" HOMOGÉNEOS -->
-        <div class="project-tag">
-          <span class="tag-label">PROYECTO ACTIVO</span>
-          <span class="tag-name">{{ nombreProyectoActivo }}</span>
-          
-          <span class="tag-label tag-label-spacer">METODOLOGÍA</span>
-          <span class="tag-name">{{ metodologiaProyecto }}</span>
-        </div>
+        <!-- COMPONENTE DE ENCABEZADO -->
+        <HeaderStatsCard 
+          :nombreProyecto="nombreProyectoActivo"
+          :metodologia="metodologiaProyecto"
+          :totalCount="usuarios.length"
+        />
       </div>
 
-      <!-- FILA INFERIOR: BOTÓN DE REGRESAR UBICADO DEBAJO DEL ENCABEZADO -->
+      <!-- FILA INFERIOR: BOTÓN DE REGRESAR -->
       <div class="back-container">
         <RouterLink to="/portal/usuarios" class="back-button">
           <ArrowLeft :size="16" class="back-icon" />
@@ -425,9 +402,6 @@ function handleCancel() {
   text-align: left;
 }
 
-/* =========================================================================
- * ESTILOS DEL ENCABEZADO ESTRUCTURADO EN BLOQUES
- * ========================================================================= */
 .top-header {
   margin-bottom: 22px;
 }
@@ -466,40 +440,6 @@ function handleCancel() {
   font-size: 15px;
 }
 
-/* TARJETA DEL PROYECTO ACTIVO Y METODOLOGÍA */
-.project-tag {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 10px 18px;
-  background: #FBEAF9;
-  border: 1px solid #F0CBEC;
-  border-radius: 14px;
-  white-space: nowrap;
-}
-
-.tag-label {
-  color: #7d8794;
-  font-size: 10px;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-bottom: 2px;
-}
-
-.tag-label-spacer {
-  margin-top: 6px;
-}
-
-.tag-name {
-  color: #5F0032;
-  font-size: 15px;
-  font-weight: 800;
-}
-
-/* BOTÓN REGRESAR COLOCADO ABAJO DEL ENCABEZADO */
 .back-container {
   display: flex;
   justify-content: flex-start;
@@ -801,11 +741,6 @@ function handleCancel() {
 @media (max-width: 700px) {
   .header-main-row {
     flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .project-tag {
-    align-self: flex-start;
     align-items: flex-start;
   }
 

@@ -4,7 +4,9 @@ import { RouterLink } from 'vue-router'
 import type { Ref } from 'vue'
 import { Monitor, Plus, Eye, Pencil, Trash2 } from 'lucide-vue-next'
 
-// Importamos la lista global y la función de eliminar
+import HeaderStatsCard from '../../components/Encabezado.vue'
+import ListFooter from '../../components/Footer.vue'
+
 import {
   sistemas,
   eliminarSistema as eliminarSistemaDatos
@@ -12,19 +14,10 @@ import {
 
 import type { Sistema } from '../../data/sistemas'
 
-/* =========================================================================
- * PROYECTO ACTIVO (SELECCIÓN ÚNICA CON TOGGLE)
- * ========================================================================= */
-
-// Guardamos el ID del sistema que está seleccionado actualmente. Si no hay ninguno, es null.
+/* PROYECTO ACTIVO */
 const sistemaSeleccionadoId = ref<number | null>(null)
 
 onMounted(() => {
-  /* =========================================================================
-   * SINCRONIZACIÓN DE SELECCIÓN EN LA LISTA Y LIMPIEZA DE EVENTO GLOBAL
-   * Al cargar la tabla de sistemas, leemos si ya había un proyecto seleccionado.
-   * Si no hay ninguno, notificamos a inicio.vue para mantener el navbar bloqueado.
-   * ========================================================================= */
   const idGuardado = localStorage.getItem('proyecto_activo_id')
   if (idGuardado) {
     sistemaSeleccionadoId.value = Number(idGuardado)
@@ -34,33 +27,31 @@ onMounted(() => {
   }
 })
 
-// Obtenemos el nombre del proyecto seleccionado dinámicamente
 const nombreProyectoActivo = computed(() => {
   if (!sistemaSeleccionadoId.value) return 'Ninguno'
   const sistema = sistemas.value.find(s => s.id === sistemaSeleccionadoId.value)
   return sistema ? sistema.nombre : 'Ninguno'
 })
 
-// Función para seleccionar/desmarcar un proyecto cuando se hace clic en la casilla
+const metodologiaProyectoActivo = computed(() => {
+  if (!sistemaSeleccionadoId.value) return ''
+  const sistema = sistemas.value.find(s => s.id === sistemaSeleccionadoId.value)
+  return sistema ? sistema.metodologia : ''
+})
+
 function toggleProyecto(id: number) {
-  // Si el proyecto presionado ya era el activo, LO DESACTIVAMOS (comportamiento toggle)
   if (sistemaSeleccionadoId.value === id) {
     sistemaSeleccionadoId.value = null
     localStorage.removeItem('proyecto_activo_id')
-    // El proyecto activo ahora es null (bloquea el navbar)
     window.dispatchEvent(new CustomEvent('proyecto-cambiado', { detail: null }))
   } else {
-    // Si era otro diferente, LO ACTIVAMOS
     sistemaSeleccionadoId.value = id
     localStorage.setItem('proyecto_activo_id', String(id))
-    // Nuevo ID seleccionado
     window.dispatchEvent(new CustomEvent('proyecto-cambiado', { detail: id }))
   }
 }
 
-/* =========================================================================
- * CONTROL DE PERMISOS Y USUARIOS
- * ========================================================================= */
+/* PERMISOS Y USUARIOS */
 type PermissionCode = 1 | 2 | 3
 
 const currentPermission = inject<Ref<PermissionCode>>('currentPermission')
@@ -87,9 +78,7 @@ if (sessionData) {
 
 const isAdmin = computed(() => currentUser.value?.roleName === 'Administrador')
 
-/* =========================================================================
- * LÓGICA PARA ELIMINAR UN SISTEMA
- * ========================================================================= */
+/* ELIMINACIÓN DE SISTEMA */
 const sistemaAEliminar = ref<Sistema | null>(null)
 
 function confirmarEliminacion(sistema: Sistema) {
@@ -102,7 +91,6 @@ function eliminarSistema() {
   const id = sistemaAEliminar.value.id
   eliminarSistemaDatos(id)
   
-  // Si el sistema que acabamos de borrar era el que estaba seleccionado como activo, limpiamos la selección
   if (sistemaSeleccionadoId.value === id) {
     sistemaSeleccionadoId.value = null
     localStorage.removeItem('proyecto_activo_id')
@@ -130,23 +118,18 @@ function cancelarEliminacion() {
       </div>
 
       <div class="header-actions">
-        <!-- 1. BOTÓN DE NUEVO SISTEMA -->
+        <!-- componente -->
+        <HeaderStatsCard 
+          :nombreProyecto="nombreProyectoActivo"
+          :metodologia="metodologiaProyectoActivo"
+          :totalCount="sistemas.length"
+        />
+
+        <!-- BOTÓN DE NUEVO SISTEMA -->
         <RouterLink v-if="canWrite" to="/portal/sistemas/nuevo" class="new-system-btn">
           <Plus :size="18" class="btn-icon" />
           <span>Nuevo sistema</span>
         </RouterLink>
-
-        <!-- 2. RECUADRO DEL PROYECTO ACTIVO EN EL MEDIO -->
-        <div class="proyecto-activo-card" :class="{ 'sin-seleccion': !sistemaSeleccionadoId }">
-          <span class="proyecto-label">Proyecto activo</span>
-          <span class="proyecto-nombre">{{ nombreProyectoActivo }}</span>
-        </div>
-
-        <!-- 3. TOTAL DE SISTEMAS A LA DERECHA -->
-        <div class="total-sistemas">
-          <span class="total-label">Total</span>
-          <span class="total-number">{{ sistemas.length }}</span>
-        </div>
       </div>
     </div>
 
@@ -155,16 +138,15 @@ function cancelarEliminacion() {
       <table class="sistemas-table">
         <thead>
           <tr>
-            <!-- Columna para la selección única -->
             <th class="col-select">Activo</th>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Metodología</th>
-            <th>Estado</th>
-            <th>Responsable</th>
-            <th>Fecha actualización</th>
-            <th>Acciones</th>
+            <th class="col-center">ID</th>
+            <th class="col-center">Nombre</th>
+            <th class="col-center">Descripción</th>
+            <th class="col-center">Metodología</th>
+            <th class="col-center">Estado</th>
+            <th class="col-center">Responsable</th>
+            <th class="col-center">Fecha actualización</th>
+            <th class="col-center">Acciones</th>
           </tr>
         </thead>
 
@@ -174,7 +156,6 @@ function cancelarEliminacion() {
             :key="sistema.id"
             :class="{ 'row-active': sistemaSeleccionadoId === sistema.id }"
           >
-            <!-- CASILLA / CHECKBOX CUSTOM CON BOTÓN -->
             <td class="col-select">
               <button
                 type="button"
@@ -187,7 +168,6 @@ function cancelarEliminacion() {
               </button>
             </td>
 
-            <!-- DATOS DE LA TABLA -->
             <td>
               <span class="id-badge">#{{ sistema.id }}</span>
             </td>
@@ -222,7 +202,6 @@ function cancelarEliminacion() {
             <td>{{ sistema.responsable }}</td>
             <td>{{ sistema.fechaActualizacion }}</td>
 
-            <!-- ACCIONES -->
             <td>
               <div class="acciones">
                 <RouterLink
@@ -255,7 +234,6 @@ function cancelarEliminacion() {
             </td>
           </tr>
 
-          <!-- SIN REGISTROS -->
           <tr v-if="sistemas.length === 0">
             <td colspan="9" class="empty-state">
               <div class="empty-icon">
@@ -269,16 +247,11 @@ function cancelarEliminacion() {
       </table>
     </div>
 
-    <!-- INFORMACIÓN INFERIOR -->
-    <div class="list-footer">
-      <div>
-        <strong>Nota:</strong> Los datos mostrados actualmente son temporales.
-      </div>
-      <div class="permission-info">
-        <span v-if="currentPermission === 2" class="read-only-message">Modo lectura</span>
-        <span v-else-if="currentPermission === 3" class="write-message">Acceso de escritura</span>
-      </div>
-    </div>
+    <!-- componente footer -->
+    <ListFooter 
+      nota="Los datos mostrados actualmente son temporales."
+      :currentPermission="currentPermission"
+    />
 
     <!-- MODAL DE CONFIRMACIÓN -->
     <div
@@ -308,7 +281,22 @@ function cancelarEliminacion() {
   color: #5F0032;
 }
 
-/* ENCABEZADO */
+.col-center {
+  text-align: center !important;
+}
+
+.rol-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 700;
+  font-size: 11px;
+  border: 1px solid #e2e8f0;
+  margin: 0 auto;
+}
+
 .list-header {
   display: flex;
   align-items: center;
@@ -349,71 +337,6 @@ function cancelarEliminacion() {
   gap: 14px;
 }
 
-/* RECUADRO DEL PROYECTO ACTIVO EN EL MEDIO */
-.proyecto-activo-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 9px 18px;
-  background: #FBEAF9;
-  border: 1px solid #F0CBEC;
-  border-radius: 12px;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
-.proyecto-activo-card.sin-seleccion {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-}
-
-.proyecto-label {
-  color: #7d8794;
-  font-size: 10px;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-bottom: 2px;
-}
-
-.proyecto-nombre {
-  color: #5F0032;
-  font-size: 15px;
-  font-weight: 800;
-}
-
-.proyecto-activo-card.sin-seleccion .proyecto-nombre {
-  color: #94a3b8;
-  font-style: italic;
-}
-
-.total-sistemas {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 70px;
-  padding: 9px 15px;
-  background: #FBEAF9;
-  border: 1px solid #F0CBEC;
-  border-radius: 12px;
-}
-
-.total-label {
-  color: #7d8794;
-  font-size: 10px;
-  text-transform: uppercase;
-  font-weight: 700;
-}
-
-.total-number {
-  color: #5F0032;
-  font-size: 22px;
-  font-weight: 800;
-}
-
 .new-system-btn {
   display: inline-flex;
   align-items: center;
@@ -442,7 +365,6 @@ function cancelarEliminacion() {
   transform: translateY(-1px);
 }
 
-/* TABLA Y COLUMNA SELECCIONADORA DE CASILLA */
 .table-container {
   width: 100%;
   overflow-x: auto;
@@ -485,7 +407,6 @@ function cancelarEliminacion() {
   width: 60px;
 }
 
-/* ESTILOS DE LA CASILLA RECTANGULAR CON LA PALOMITA */
 .checkbox-box {
   width: 22px;
   height: 22px;
@@ -530,7 +451,6 @@ function cancelarEliminacion() {
   background-color: #FDF5FC;
 }
 
-/* DATOS */
 .id-badge {
   display: inline-block;
   padding: 4px 7px;
@@ -559,7 +479,6 @@ function cancelarEliminacion() {
   font-weight: 600;
 }
 
-/* ESTADOS */
 .estado-badge {
   display: inline-block;
   padding: 5px 9px;
@@ -584,7 +503,6 @@ function cancelarEliminacion() {
   color: #991b1b;
 }
 
-/* ACCIONES CON ÍCONOS */
 .acciones {
   display: flex;
   gap: 6px;
@@ -636,7 +554,6 @@ function cancelarEliminacion() {
   transform: translateY(-1px);
 }
 
-/* ESTADO VACÍO */
 .empty-state {
   padding: 55px 20px !important;
   text-align: center !important;
@@ -659,41 +576,6 @@ function cancelarEliminacion() {
   font-size: 12px;
 }
 
-/* PIE */
-.list-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-  margin-top: 15px;
-  padding: 11px 14px;
-  border-radius: 99px;
-  background: #fafafa;
-  color: #8a94a1;
-  font-size: 10px;
-}
-
-.permission-info {
-  white-space: nowrap;
-}
-
-.read-only-message {
-  padding: 4px 8px;
-  border-radius: 5px;
-  background: #fef3c7;
-  color: #92400e;
-  font-weight: 700;
-}
-
-.write-message {
-  padding: 4px 8px;
-  border-radius: 5px;
-  background: #d9efbd;
-  color: #2d5a1e;
-  font-weight: 700;
-}
-
-/* MODAL */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -781,7 +663,6 @@ function cancelarEliminacion() {
   background: #e88080;
 }
 
-/* RESPONSIVE */
 @media (max-width: 900px) {
   .table-container {
     overflow-x: auto;
@@ -796,15 +677,6 @@ function cancelarEliminacion() {
 
   .header-actions {
     flex-wrap: wrap;
-  }
-
-  .list-footer {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .permission-info {
-    white-space: normal;
   }
 }
 </style>

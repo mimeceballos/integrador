@@ -268,12 +268,6 @@ function handleLogout() {
                     </span>
                   </li>
                   <li>
-                    <span>Roles:</span>
-                    <span class="perm-badge" :class="'perm-' + currentUser.permissions.roles">
-                      {{ currentUser.permissions.roles === 1 ? 'Desactivo' : currentUser.permissions.roles === 2 ? 'Lectura' : 'Escritura' }}
-                    </span>
-                  </li>
-                  <li>
                     <span>Historias:</span>
                     <span class="perm-badge" :class="'perm-' + currentUser.permissions.historias">
                       {{ currentUser.permissions.historias === 1 ? 'Desactivo' : currentUser.permissions.historias === 2 ? 'Lectura' : 'Escritura' }}

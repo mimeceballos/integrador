@@ -4,6 +4,9 @@ import { useRoute, useRouter, RouterLink } from 'vue-router'
 import type { Ref } from 'vue'
 import { ArrowLeft, X, Check, BookOpen, Plus, Trash2 } from 'lucide-vue-next'
 
+// Componentes reutilizables estandarizados
+import HeaderStatsCard from '../../components/Encabezado.vue'
+
 // Importamos datos de Sistemas, Usuarios e Historias
 import { sistemas } from '../../data/sistemas'
 import { usuarios } from '../../data/usuarios'
@@ -33,6 +36,10 @@ const proyectoActivoId = ref<number | null>(
 
 const proyectoActivo = computed(() => {
   return sistemas.value.find(s => s.id === proyectoActivoId.value)
+})
+
+const nombreProyectoActivo = computed<string>(() => {
+  return proyectoActivo.value?.nombre || ''
 })
 
 const metodologiaProyecto = computed(() => {
@@ -88,7 +95,7 @@ function cerrarModalReq() {
   isReqModalOpen.value = false
 }
 
-// Agrega un nuevo requerimiento al arreglo local usando push clásico
+// Agrega un nuevo requerimiento a la lista sin cerrar el modal
 function guardarRequerimiento() {
   if (!reqNombre.value.trim() || !reqDescripcion.value.trim()) {
     reqError.value = 'Ingresa tanto el nombre como la descripción.'
@@ -101,8 +108,13 @@ function guardarRequerimiento() {
     descripcion: reqDescripcion.value.trim()
   }
 
+  // Se añade a la tabla inmediatamente
   requerimientosLista.value.push(nuevoReq)
-  cerrarModalReq()
+
+  // Se limpian los campos y errores para poder agregar el siguiente
+  reqNombre.value = ''
+  reqDescripcion.value = ''
+  reqError.value = ''
 }
 
 // Elimina un requerimiento de la lista
@@ -177,7 +189,6 @@ function handleSubmit() {
   if (!canWrite.value || !validate() || !proyectoActivoId.value) return
   isSaving.value = true
 
-  // Buscar el nombre completo del participante seleccionado en el combobox
   let nombreCapturador = 'Usuario Desconocido'
   for (let i = 0; i < usuarios.value.length; i++) {
     if (usuarios.value[i].email === form.usuarioEmail) {
@@ -217,7 +228,7 @@ function handleCancel() {
 <template>
   <section class="historias-form">
 
-    <!-- ENCABEZADO SUPERIOR REDISEÑADO -->
+    <!-- ENCABEZADO SUPERIOR CON COMPONENTE REUTILIZABLE -->
     <div class="top-header">
       <div class="header-main-row">
         <div class="header-info">
@@ -228,14 +239,13 @@ function handleCancel() {
           </div>
         </div>
 
-        <!-- RECUADRO CON "PROYECTO ACTIVO" Y "METODOLOGÍA" HOMOGÉNEOS -->
-        <div class="project-tag">
-          <span class="tag-label">PROYECTO ACTIVO</span>
-          <span class="tag-name">{{ proyectoActivo ? proyectoActivo.nombre : '' }}</span>
-          
-          <span class="tag-label tag-label-spacer">METODOLOGÍA</span>
-          <span class="tag-name">{{ metodologiaProyecto }}</span>
-        </div>
+        <!-- COMPONENTE ENCABEZADO ESTANDARIZADO CON PROYECTO ACTIVO Y METODOLOGÍA -->
+        <HeaderStatsCard 
+          :nombreProyecto="nombreProyectoActivo"
+          :metodologia="metodologiaProyecto"
+          :totalCount="requerimientosLista.length"
+          totalLabel="Requerimientos"
+        />
       </div>
 
       <!-- BOTÓN REGRESAR COLOCADO ABAJO DEL ENCABEZADO -->
@@ -398,7 +408,7 @@ function handleCancel() {
       </div>
     </form>
 
-    <!-- MODAL PARA AGREGAR REQUERIMIENTO -->
+    <!-- MODAL PARA AGREGAR REQUERIMIENTOS (PERMITE AGREGAR MÚLTIPLES Y LUEGO CERRAR) -->
     <div v-if="isReqModalOpen" class="modal-overlay" @click.self="cerrarModalReq">
       <div class="req-modal">
         <h3>Nuevo Requerimiento</h3>
@@ -410,6 +420,7 @@ function handleCancel() {
             v-model="reqNombre"
             type="text"
             placeholder="Ej. Validación de formato de correo"
+            @keyup.enter="guardarRequerimiento"
           />
         </div>
 
@@ -426,7 +437,7 @@ function handleCancel() {
 
         <div class="modal-actions">
           <button type="button" class="modal-cancel-btn" @click="cerrarModalReq">
-            Cancelar
+            Cerrar
           </button>
           <button type="button" class="confirm-req-btn" @click="guardarRequerimiento">
             Agregar Requerimiento
@@ -481,39 +492,6 @@ function handleCancel() {
   margin: 4px 0 0 0;
   color: #6c7886;
   font-size: 15px;
-}
-
-/* TARJETA DEL PROYECTO ACTIVO Y METODOLOGÍA */
-.project-tag {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 10px 18px;
-  background: #FBEAF9;
-  border: 1px solid #F0CBEC;
-  border-radius: 14px;
-  white-space: nowrap;
-}
-
-.tag-label {
-  color: #7d8794;
-  font-size: 10px;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-bottom: 2px;
-}
-
-.tag-label-spacer {
-  margin-top: 6px;
-}
-
-.tag-name {
-  color: #5F0032;
-  font-size: 15px;
-  font-weight: 800;
 }
 
 .back-container {
@@ -744,6 +722,10 @@ function handleCancel() {
 
 .delete-btn:hover {
   background: #fecaca;
+}
+
+.col-center {
+  text-align: center !important;
 }
 
 /* BOTONES PRINCIPALES */

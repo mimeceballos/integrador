@@ -2,7 +2,7 @@
 // Importación de funciones reactivas de Vue y utilidades de Vue Router
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useReCaptcha } from 'vue-recaptcha-v3' // 1 - Importar el hook de reCAPTCHA
+import { useReCaptcha } from 'vue-recaptcha-v3' // hook de reCAPTCHA
 
 // Estructura para los datos recopilados en el formulario de inicio de sesión
 interface LoginForm {
@@ -142,6 +142,9 @@ async function handleSubmit(): Promise<void> {
     }
 //guarda el perfil en el almacenamiento local del navegador
     localStorage.setItem('auth_user', JSON.stringify(account.profile))
+
+    // NOTIFICAR A APP.VUE QUE LA SESIÓN CAMBIÓ
+    window.dispatchEvent(new Event('auth-change'))
 
     successMessage.value = 'usuario correcto'
     emit('login-success', { email: form.email })
