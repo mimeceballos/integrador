@@ -182,7 +182,7 @@ function irAEditar(id: number) {
           @click="mostrarOcultas = true"
         >
           <EyeOff :size="14" />
-          <span>Ocultas / Archivadas</span>
+          <span>Archivadas</span>
         </button>
       </div>
     </div>

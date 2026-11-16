@@ -98,10 +98,14 @@ function cerrarModalReq() {
 
 // Agrega un nuevo requerimiento a la lista sin cerrar el modal
 function guardarRequerimiento() {
-  if (!reqNombre.value.trim() || !reqDescripcion.value.trim()) {
-    reqError.value = 'Ingresa tanto el nombre como la descripción.'
+  if (
+    reqNombre.value.trim().length < 5 ||
+    reqDescripcion.value.trim().length < 5
+  ) {
+    reqError.value = 'El nombre y la descripción deben contener al menos 5 caracteres.'
     return
   }
+
 
   const nuevoReq: Requerimiento = {
     id: Date.now(),
@@ -132,11 +136,6 @@ const totalEnCurso = computed<number>(() =>
 // Cambia el estatus de un requerimiento
 function cambiarEstatus(req: Requerimiento, estatus: EstatusRequerimiento) {
   req.estatus = estatus
-}
-
-// El checkbox marca "Completado" o regresa a "No iniciado"
-function alternarCheck(req: Requerimiento) {
-  req.estatus = estatusDe(req) === 'Completado' ? 'No iniciado' : 'Completado'
 }
 
 // Clase de color para cada botón de estatus
@@ -217,12 +216,12 @@ function validate(): boolean {
     errors.usuarioEmail = 'Selecciona la persona que levanta la historia'
     valid = false
   }
-  if (!form.quiero.trim()) {
-    errors.quiero = 'El campo "Quiero" es obligatorio'
+  if (form.quiero.trim().length < 5) {
+    errors.quiero = 'El campo "Quiero" debe contener al menos 5 caracteres'
     valid = false
   }
-  if (!form.para.trim()) {
-    errors.para = 'El campo "Para" es obligatorio'
+   if (form.para.trim().length < 5) {
+    errors.para = 'El campo "Para" debe contener al menos 5 caracteres'
     valid = false
   }
 
@@ -423,7 +422,6 @@ function handleCancel() {
           <table class="req-table">
             <thead>
               <tr>
-                <th class="col-check">Check</th>
                 <th>Nombre</th>
                 <th>Descripción</th>
                 <th class="col-center">Estatus</th>
@@ -432,15 +430,7 @@ function handleCancel() {
             </thead>
             <tbody>
               <tr v-for="req in requerimientosLista" :key="req.id" :class="{ 'req-done': estatusDe(req) === 'Completado' }">
-                <td class="col-check">
-                  <input
-                    :checked="estatusDe(req) === 'Completado'"
-                    type="checkbox"
-                    class="req-check"
-                    :aria-label="'Marcar como completado: ' + req.nombre"
-                    @change="alternarCheck(req)"
-                  />
-                </td>
+                
                 <td class="req-name">{{ req.nombre }}</td>
                 <td class="req-desc">{{ req.descripcion }}</td>
                 <td class="col-center">
@@ -743,7 +733,7 @@ function handleCancel() {
 
 .error-text {
   margin-top: 6px;
-  color: #0f766e;
+  color: #dc2626;
   font-size: 13px;
 }
 
@@ -1029,7 +1019,7 @@ function handleCancel() {
 .modal-error {
   display: block;
   font-size: 12px;
-  color: #0f766e;
+  color: #dc2626;
   margin-bottom: 12px;
 }
 
