@@ -1,9 +1,19 @@
 import { ref } from 'vue'
 
+/* ESTATUS DE CADA REQUERIMIENTO (los mismos del planner) */
+export type EstatusRequerimiento = 'No iniciado' | 'En curso' | 'Completado'
+
+export const ESTATUS_REQUERIMIENTO: EstatusRequerimiento[] = [
+  'No iniciado',
+  'En curso',
+  'Completado'
+]
+
 export interface Requerimiento {
   id: number
   nombre: string
   descripcion: string
+  estatus?: EstatusRequerimiento // si no existe se considera 'No iniciado'
 }
 
 export interface HistoriaUsuario {
@@ -55,6 +65,23 @@ export const historias = ref<HistoriaUsuario[]>([
     ]
   }
 ])
+
+/* FUNCIONES AUXILIARES DE ESTATUS */
+
+// Devuelve el estatus de un requerimiento (por defecto 'No iniciado')
+export function estatusDe(req: Requerimiento): EstatusRequerimiento {
+  return req.estatus ?? 'No iniciado'
+}
+
+// Cuenta cuántos requerimientos de una historia están completados
+export function contarCompletados(historia: HistoriaUsuario): number {
+  return historia.requerimientos.filter(r => estatusDe(r) === 'Completado').length
+}
+
+// Una historia se puede eliminar/desactivar solo si TODOS sus requerimientos están completados
+export function puedeEliminarse(historia: HistoriaUsuario): boolean {
+  return contarCompletados(historia) === historia.requerimientos.length
+}
 
 /* FUNCIONES AUXILIARES PARA FECHAS */
 

@@ -221,7 +221,7 @@ function cancelarDesactivacion() {
 <style scoped>
 .lista-usuarios {
   width: 100%;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .list-header {
@@ -240,7 +240,7 @@ function cancelarDesactivacion() {
 }
 
 .header-icon {
-  color: #5F0032;
+  color: #1e3a5f;
   flex-shrink: 0;
   stroke-width: 2;
 }
@@ -249,7 +249,7 @@ function cancelarDesactivacion() {
   margin: 0;
   font-size: 26px;
   font-weight: 800;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .header-text p {
@@ -270,9 +270,10 @@ function cancelarDesactivacion() {
   justify-content: center;
   gap: 6px;
   padding: 12px 22px;
-  background: #99154E;
+  background: #ffbf69;
   color: #ffffff;
   border-radius: 15px;
+  border: 2px solid #ff9f1c;
   text-decoration: none;
   font-size: 13px;
   font-weight: 700;
@@ -295,7 +296,7 @@ function cancelarDesactivacion() {
 .table-container {
   width: 100%;
   overflow-x: auto;
-  border: 1px solid #eef6ee;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
 }
 
@@ -307,13 +308,13 @@ function cancelarDesactivacion() {
 }
 
 .usuarios-table thead {
-  background: #d1d0d0;
+  background: #dee2e6;
 }
 
 .usuarios-table th {
   padding: 13px 12px;
   text-align: left;
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
@@ -323,7 +324,7 @@ function cancelarDesactivacion() {
 
 .usuarios-table td {
   padding: 14px 12px;
-  border-top: 1px solid #eef6ee;
+  border-top: 1px solid #e2e8f0;
   color: #4a5563;
   font-size: 12px;
   vertical-align: middle;
@@ -343,15 +344,13 @@ function cancelarDesactivacion() {
 }
 
 .usuarios-table tbody tr:hover {
-  background-color: #FDF5FC;
+  background-color: #f8fafc;
 }
 
 .id-badge {
   display: inline-block;
   padding: 4px 7px;
-  border-radius: 6px;
-  background: #F1C0EC;
-  color: #5F0032;
+  color: #1e3a5f;
   font-weight: 800;
 }
 
@@ -386,8 +385,8 @@ function cancelarDesactivacion() {
 }
 
 .estado-badge.activo {
-  background: #d9efbd;
-  color: #2d5a1e;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .estado-badge.inactivo {
@@ -438,12 +437,12 @@ function cancelarDesactivacion() {
 }
 
 .deactivate-btn.reactivate-btn {
-  background: #d9efbd;
-  color: #2d5a1e;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .deactivate-btn.reactivate-btn:hover {
-  background: #c7e6a3;
+  background: #a7f3d0;
 }
 
 .empty-state {
@@ -453,12 +452,12 @@ function cancelarDesactivacion() {
 
 .empty-icon {
   margin-bottom: 10px;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .empty-state h3 {
   margin: 0 0 7px;
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 16px;
 }
 
@@ -538,7 +537,7 @@ function cancelarDesactivacion() {
 
 .cancel-btn {
   background: #eef2f6;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .cancel-btn:hover {

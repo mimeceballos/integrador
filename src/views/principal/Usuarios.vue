@@ -25,7 +25,7 @@ function handleLogout(): void {
   align-items: center;
   justify-content: center;
   min-height: 80vh;
-  color: #4D6787;
+  color: #5b7089;
   font-family: inherit;
 }
 
@@ -37,7 +37,7 @@ h1 {
 .status-text {
   font-size: 18px;
   font-weight: 600;
-  color: #A5AF79;
+  color: #64748b;
   margin-bottom: 24px;
 }
 
@@ -47,8 +47,8 @@ h1 {
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: #4D6787;
-  background: #CFEBFF;
+  color: #5b7089;
+  background: #e6edf5;
   border: none;
   border-radius: 999px;
   padding: 12px 24px;

@@ -50,8 +50,8 @@ defineProps<{
   text-align: center;
   padding: 6px 14px;
   min-height: 52px;
-  background: #FBEAF9;
-  border: 1px solid #F0CBEC;
+  background: #f1f5fa;
+  border: 1px solid #d3deec;
   border-radius: 12px;
   white-space: nowrap;
   transition: all 0.2s ease;
@@ -72,7 +72,7 @@ defineProps<{
 }
 
 .stat-value {
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 14px;
   font-weight: 800;
   line-height: 1.2;

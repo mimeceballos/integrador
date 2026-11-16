@@ -398,7 +398,7 @@ function handleCancel() {
 <style scoped>
 .usuario-form {
   width: 100%;
-  color: #5F0032;
+  color: #1e3a5f;
   text-align: left;
 }
 
@@ -422,7 +422,7 @@ function handleCancel() {
 }
 
 .header-icon {
-  color: #5F0032;
+  color: #1e3a5f;
   flex-shrink: 0;
   stroke-width: 2;
 }
@@ -431,7 +431,7 @@ function handleCancel() {
   margin: 0;
   font-size: 26px;
   font-weight: 800;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .header-text p {
@@ -451,9 +451,9 @@ function handleCancel() {
   gap: 7px;
   padding: 8px 15px;
   border-radius: 999px;
-  background: #FBEAF9;
-  border: 1px solid #F0CBEC;
-  color: #5F0032;
+  background: #f1f5fa;
+  border: 1px solid #d3deec;
+  color: #1e3a5f;
   text-decoration: none;
   font-size: 12px;
   font-weight: 700;
@@ -462,7 +462,7 @@ function handleCancel() {
 }
 
 .back-button:hover {
-  background: #F5D6F2;
+  background: #dde6f1;
   transform: translateX(-2px);
 }
 
@@ -488,7 +488,7 @@ function handleCancel() {
 
 .notice-card h2 {
   margin: 0 0 8px;
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 20px;
   font-weight: 800;
 }
@@ -506,7 +506,7 @@ function handleCancel() {
 
 .form-header h1 {
   margin: 0 0 6px;
-  color: #5F0032;
+  color: #f79d65;
   font-size: 26px;
   font-weight: 800;
   letter-spacing: 1px;
@@ -529,7 +529,7 @@ function handleCancel() {
 
 .section-divider h3 {
   margin: 0;
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.5px;
@@ -576,7 +576,7 @@ function handleCancel() {
   font-size: 15px;
   padding: 6px 2px 8px;
   border: none;
-  border-bottom: 1.5px solid #4D6787;
+  border-bottom: 1.5px solid #5b7089;
   background: transparent;
   color: #1a1a1a;
   outline: none;
@@ -586,16 +586,16 @@ function handleCancel() {
 
 .field input:focus,
 .field select:focus {
-  border-bottom-color: #D46D25;
+  border-bottom-color: #0f766e;
 }
 
 .field .invalid {
-  border-bottom-color: #D46D25;
+  border-bottom-color: #0f766e;
 }
 
 .error-text {
   margin-top: 6px;
-  color: #D46D25;
+  color: #0f766e;
   font-size: 13px;
 }
 
@@ -637,17 +637,17 @@ function handleCancel() {
   height: 20px;
   width: 20px;
   background-color: #ffffff;
-  border: 2px solid #5F0032;
+  border: 2px solid #1e3a5f;
   border-radius: 6px;
   transition: all 0.2s ease;
 }
 
 .checkbox-container:hover input ~ .checkmark {
-  background-color: #FBEAF9;
+  background-color: #f1f5fa;
 }
 
 .checkbox-container input:checked ~ .checkmark {
-  background-color: #5F0032;
+  background-color: #1e3a5f;
 }
 
 .checkmark:after {
@@ -704,12 +704,12 @@ function handleCancel() {
 
 .submit-btn {
   color: #ffffff;
-  background: #99154E;
+  background: #2c5282;
 }
 
 .cancel-btn {
-  color: #5F0032;
-  background: #E8F9A2;
+  color: #1e3a5f;
+  background: #dbe7f5;
 }
 
 .submit-btn:hover:not(:disabled),

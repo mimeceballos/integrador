@@ -383,7 +383,7 @@ function formatearPresupuesto(valor: number) {
 
 .detalle-sistema {
   width: 100%;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 
@@ -398,9 +398,9 @@ function formatearPresupuesto(valor: number) {
   gap: 7px;
   padding: 8px 13px;
   border-radius: 999px;
-  background: #FBEAF9;
-  border: 1px solid #F0CBEC;
-  color: #5F0032;
+  background: #f1f5fa;
+  border: 1px solid #d3deec;
+  color: #1e3a5f;
   text-decoration: none;
   font-size: 12px;
   font-weight: 700;
@@ -408,7 +408,7 @@ function formatearPresupuesto(valor: number) {
 }
 
 .back-button:hover {
-  background: #FBEAF9;
+  background: #f1f5fa;
   transform: translateX(-2px);
 }
 
@@ -426,8 +426,8 @@ function formatearPresupuesto(valor: number) {
   gap: 20px;
   padding: 24px;
   margin-bottom: 18px;
-  background: #E8F9A2;
-  border: 1px solid #d8ee81;
+  background: #dbe7f5;
+  border: 1px solid #b9cfe8;
   border-radius: 16px;
 }
 
@@ -448,7 +448,7 @@ function formatearPresupuesto(valor: number) {
 
 .detail-header h1 {
   margin: 0 0 6px;
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 25px;
   font-weight: 800;
 }
@@ -473,8 +473,8 @@ function formatearPresupuesto(valor: number) {
 }
 
 .estado-badge.activo {
-  background: #d9efbd;
-  color: #2d5a1e;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .estado-badge.desarrollo {
@@ -517,7 +517,7 @@ function formatearPresupuesto(valor: number) {
 
 .section-title h2 {
   margin: 0 0 2px;
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 16px;
   font-weight: 800;
 }
@@ -560,14 +560,14 @@ function formatearPresupuesto(valor: number) {
 }
 
 .info-value.budget {
-  color: #365d42;
+  color: #065f46;
 }
 
 
 /* OBJETIVO */
 .objective-card {
   padding: 16px;
-  border-left: 4px solid #F1C0EC;
+  border-left: 4px solid #c9d8ea;
   border-radius: 8px;
   background: #f8fafc;
   color: #526274;
@@ -595,7 +595,7 @@ function formatearPresupuesto(valor: number) {
 
 .detail-table th {
   padding: 11px 12px;
-  color: #5F0032;
+  color: #1e3a5f;
   text-align: left;
   font-size: 10px;
   font-weight: 800;
@@ -620,8 +620,8 @@ function formatearPresupuesto(valor: number) {
   justify-content: center;
   padding: 4px 7px;
   border-radius: 5px;
-  background: #F1C0EC;
-  color: #5F0032;
+  background: #c9d8ea;
+  color: #1e3a5f;
   font-weight: 800;
 }
 
@@ -634,8 +634,8 @@ function formatearPresupuesto(valor: number) {
 }
 
 .inventory-status.disponible {
-  background: #d9efbd;
-  color: #2d5a1e;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .inventory-status.uso {
@@ -675,8 +675,8 @@ function formatearPresupuesto(valor: number) {
   justify-content: center;
   align-items: center;
   border-radius: 50%;
-  background: #F1C0EC;
-  color: #5F0032;
+  background: #c9d8ea;
+  color: #1e3a5f;
   font-size: 15px;
   font-weight: 800;
 }
@@ -711,8 +711,8 @@ function formatearPresupuesto(valor: number) {
   margin-top: 7px;
   padding: 3px 7px;
   border-radius: 5px;
-  background: #FBEAF9;
-  color: #5F0032;
+  background: #f1f5fa;
+  color: #1e3a5f;
   font-size: 9px;
   font-weight: 700;
 }
@@ -744,7 +744,7 @@ function formatearPresupuesto(valor: number) {
 
 .not-found h2 {
   margin: 0 0 7px;
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 19px;
 }
 
@@ -758,8 +758,8 @@ function formatearPresupuesto(valor: number) {
   display: inline-block;
   padding: 9px 14px;
   border-radius: 8px;
-  background: #F1C0EC;
-  color: #5F0032;
+  background: #c9d8ea;
+  color: #1e3a5f;
   text-decoration: none;
   font-size: 12px;
   font-weight: 700;
@@ -778,7 +778,7 @@ function formatearPresupuesto(valor: number) {
 }
 
 .footer-return {
-  color: #5F0032;
+  color: #1e3a5f;
   font-weight: 700;
   text-decoration: none;
 }

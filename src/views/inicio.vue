@@ -306,10 +306,10 @@ function handleLogout() {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #FBEAF9;
+  background: #f1f5fa;
   padding: 6px 14px;
   border-radius: 30px;
-  border: 1px solid #F0CBEC;
+  border: 1px solid #d3deec;
   cursor: pointer;
   transition: all 0.2s ease;
   outline: none;
@@ -317,13 +317,13 @@ function handleLogout() {
 
 .user-card-top:hover,
 .user-card-top.is-active {
-  background: #F5D6F2;
+  background: #dde6f1;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .dropdown-arrow {
   font-size: 12px;
-  color: #5F0032;
+  color: #1e3a5f;
   margin-left: 4px;
 }
 
@@ -356,7 +356,7 @@ function handleLogout() {
 .dropdown-header h4 {
   margin: 0;
   font-size: 14px;
-  color: #5F0032;
+  color: #1e3a5f;
   font-weight: 700;
 }
 
@@ -394,7 +394,7 @@ function handleLogout() {
 .permissions-section h5 {
   margin: 0 0 10px;
   font-size: 12px;
-  color: #5F0032;
+  color: #1e3a5f;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -434,7 +434,7 @@ function handleLogout() {
   width: 260px;
   min-width: 260px;
   max-width: 260px;
-  background-color: #5F0032;
+  background-color: #1e3a5f;
   color: #ffffff;
   display: flex;
   flex-direction: column;
@@ -448,7 +448,7 @@ function handleLogout() {
   font-size: 18px;
   font-weight: 800;
   letter-spacing: 1.5px;
-  color: #E8F9A2;
+  color: #dbe7f5;
   text-transform: uppercase;
   text-align: center;
 }
@@ -485,12 +485,12 @@ function handleLogout() {
 }
 
 .menu-item.router-link-active {
-  background: #E8F9A2;
-  color: #5F0032;
+  background: #dbe7f5;
+  color: #1e3a5f;
 }
 
 .menu-item.is-readonly.router-link-active {
-  background: #EAA2E5;
+  background: #a9bfd9;
 }
 
 .menu-item.disabled {
@@ -526,8 +526,8 @@ function handleLogout() {
 }
 
 .badge-write {
-  background-color: #d9efbd;
-  color: #2d5a1e;
+  background-color: #d1fae5;
+  color: #065f46;
 }
 
 .badge-disabled {
@@ -539,7 +539,7 @@ function handleLogout() {
 .logout-btn {
   margin-top: auto;
   padding: 13px;
-  background: #99154E;
+  background: #2c5282;
   color: #ffffff;
   border: none;
   border-radius: 999px;
@@ -598,8 +598,8 @@ function handleLogout() {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #F1C0EC;
-  color: #5F0032;
+  background: #c9d8ea;
+  color: #1e3a5f;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -620,7 +620,7 @@ function handleLogout() {
 
 .user-role {
   font-size: 11px;
-  color: #99154E;
+  color: #2c5282;
   font-weight: 600;
 }
 

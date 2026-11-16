@@ -4,6 +4,7 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useReCaptcha } from 'vue-recaptcha-v3' // hook de reCAPTCHA
 
+
 // Estructura para los datos recopilados en el formulario de inicio de sesión
 interface LoginForm {
   email: string
@@ -177,9 +178,6 @@ function fillCredentials(email: string): void {
 <template>
   
   <section class="login-page">
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-    <div class="blob blob-3"></div>
 
     <div class="page-header">
       <h2 class="page-title">Administrador de Proyectos</h2>
@@ -264,17 +262,13 @@ function fillCredentials(email: string): void {
         </button>
       </div>
 
-      <div class="login-image-side">
-        <div class="side-blob side-blob-1"></div>
-        <div class="side-blob side-blob-2"></div>
-        <div class="side-blob side-blob-3"></div>
-      </div>
     </form>
   </section>
 </template>
 
 <style scoped>
 .login-page {
+  font-family: 'Futura', sans-serif;
   position: relative;
   flex-grow: 1;
   display: flex;
@@ -284,9 +278,7 @@ function fillCredentials(email: string): void {
   gap: 28px;
   padding: 2px 60px 20px;
   box-sizing: border-box;
-  overflow: hidden;
   background: #F2F2F2;
-  isolation: isolate;
 }
 
 .page-header {
@@ -306,8 +298,7 @@ function fillCredentials(email: string): void {
 .login-card {
   position: relative;
   z-index: 1;
-  width: 100%;
-  max-width: 860px;
+  width: 500px;
   display: flex;
   flex-direction: row;
   align-items: stretch;
@@ -327,51 +318,6 @@ function fillCredentials(email: string): void {
   box-sizing: border-box;
 }
 
-.login-image-side {
-  position: relative;
-  flex: 1 1 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #EFEFEF;
-  overflow: hidden;
-}
-
-.side-blob {
-  position: absolute;
-  z-index: 0;
-}
-
-.side-blob-1 {
-  top: -12%;
-  left: -15%;
-  width: 70%;
-  height: 60%;
-  background: #EAA2E5;
-  opacity: 0.9;
-  border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%;
-}
-
-.side-blob-2 {
-  bottom: -18%;
-  right: -12%;
-  width: 65%;
-  height: 55%;
-  background: #5F0032;
-  opacity: 0.85;
-  border-radius: 60% 40% 30% 70% / 55% 65% 35% 45%;
-}
-
-.side-blob-3 {
-  bottom: 10%;
-  left: 5%;
-  width: 40%;
-  height: 30%;
-  background: #E8F9A2;
-  opacity: 0.5;
-  border-radius: 55% 45% 60% 40% / 40% 55% 45% 60%;
-}
-
 .login-title {
   margin: 0 0 4px;
   font-size: 26px;
@@ -388,7 +334,7 @@ function fillCredentials(email: string): void {
   font-weight: 700;
   letter-spacing: 0.5px;
   text-align: center;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .field {
@@ -411,7 +357,7 @@ function fillCredentials(email: string): void {
   font-size: 15px;
   padding: 6px 2px 8px;
   border: none;
-  border-bottom: 1.5px solid #4D6787;
+  border-bottom: 1.5px solid #5b7089;
   background: transparent !important;
   color: #1a1a1a !important;
   outline: none;
@@ -429,19 +375,19 @@ function fillCredentials(email: string): void {
 }
 
 .field input:focus {
-  border-bottom-color: #D46D25;
+  border-bottom-color: #0f766e;
   background: transparent !important;
   outline: none;
 }
 
 .field input.invalid {
-  border-bottom-color: #D46D25;
+  border-bottom-color: #0f766e;
 }
 
 .error-text {
   margin-top: 6px;
   font-size: 13px;
-  color: #D46D25;
+  color: #0f766e;
 }
 
 .password-wrapper {
@@ -461,7 +407,7 @@ function fillCredentials(email: string): void {
   transform: translateY(-50%);
   background: none !important;
   border: none !important;
-  color: #4D6787 !important;
+  color: #5b7089 !important;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -473,15 +419,15 @@ function fillCredentials(email: string): void {
 
 .toggle-password:focus,
 .toggle-password:active {
-  color: #4D6787 !important;
+  color: #5b7089 !important;
   outline: none !important;
   background: none !important;
 }
 
 .server-error {
-  background: rgba(212, 109, 37, 0.12);
-  border: 1px solid #D46D25;
-  color: #b05111;
+  background: rgba(15, 118, 110, 0.12);
+  border: 1px solid #0f766e;
+  color: #115e59;
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 14px;
@@ -491,9 +437,9 @@ function fillCredentials(email: string): void {
 }
 
 .success-message {
-  background: rgba(104, 157, 75, 0.15);
-  border: 1px solid #689D4B;
-  color: #3b6624;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid #10b981;
+  color: #047857;
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 14px;
@@ -510,7 +456,7 @@ function fillCredentials(email: string): void {
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #FFFF;
-  background: #99154E;
+  background: #AFD06E;
   border: none;
   border-radius: 999px;
   padding: 13px;
@@ -543,8 +489,8 @@ function fillCredentials(email: string): void {
   font: inherit;
   font-size: 12px;
   font-weight: 600;
-  color: #5F0032;
-  background: #E8F9A2;
+  color: #132441;
+  background: #dbe7f5;
   border: 1.5px solid #FFFF;
   border-radius: 999px;
   padding: 6px 14px;
@@ -553,7 +499,7 @@ function fillCredentials(email: string): void {
 }
 
 .quick-login-btn:hover {
-  background: #EAA2E5;
+  background: #a9bfd9;
   transform: translateY(-1px);
 }
 
@@ -561,11 +507,6 @@ function fillCredentials(email: string): void {
   .login-card {
     flex-direction: column;
     min-height: auto;
-  }
-
-  .login-image-side {
-    min-height: 200px;
-    order: -1;
   }
 }
 </style>

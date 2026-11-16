@@ -17,7 +17,8 @@ import {
   fechaHoy,
   fechaHoyIso
 } from '../../data/historias'
-import type { Requerimiento, HistoriaUsuario } from '../../data/historias'
+import { ESTATUS_REQUERIMIENTO, estatusDe } from '../../data/historias'
+import type { Requerimiento, HistoriaUsuario, EstatusRequerimiento } from '../../data/historias'
 
 const route = useRoute()
 const router = useRouter()
@@ -105,16 +106,57 @@ function guardarRequerimiento() {
   const nuevoReq: Requerimiento = {
     id: Date.now(),
     nombre: reqNombre.value.trim(),
-    descripcion: reqDescripcion.value.trim()
+    descripcion: reqDescripcion.value.trim(),
+    estatus: 'No iniciado'
   }
 
   // Se añade a la tabla inmediatamente
   requerimientosLista.value.push(nuevoReq)
 
-  // Se limpian los campos y errores para poder agregar el siguiente
+    // Se limpian los campos y errores para poder agregar el siguiente
   reqNombre.value = ''
   reqDescripcion.value = ''
   reqError.value = ''
+}
+
+// Cantidad de requerimientos con estatus "Completado" (checks)
+const totalCompletados = computed<number>(() =>
+  requerimientosLista.value.filter(r => estatusDe(r) === 'Completado').length
+)
+
+// Cantidad de requerimientos "En curso"
+const totalEnCurso = computed<number>(() =>
+  requerimientosLista.value.filter(r => estatusDe(r) === 'En curso').length
+)
+
+// Cambia el estatus de un requerimiento
+function cambiarEstatus(req: Requerimiento, estatus: EstatusRequerimiento) {
+  req.estatus = estatus
+}
+
+// El checkbox marca "Completado" o regresa a "No iniciado"
+function alternarCheck(req: Requerimiento) {
+  req.estatus = estatusDe(req) === 'Completado' ? 'No iniciado' : 'Completado'
+}
+
+// Clase de color para cada botón de estatus
+function claseEstatus(estatus: EstatusRequerimiento): string {
+  if (estatus === 'En curso') return 'st-curso'
+  if (estatus === 'Completado') return 'st-completado'
+  return 'st-pendiente'
+}
+
+// Porcentaje de avance de la historia (0 a 100)
+const porcentajeAvance = computed<number>(() => {
+  const total = requerimientosLista.value.length
+  return total === 0 ? 0 : Math.round((totalCompletados.value / total) * 100)
+})
+
+// Marca o desmarca todos los requerimientos a la vez
+function marcarTodos(valor: boolean) {
+  requerimientosLista.value.forEach(r => {
+    r.estatus = valor ? 'Completado' : 'No iniciado'
+  })
 }
 
 // Elimina un requerimiento de la lista
@@ -130,7 +172,7 @@ function cargarFormulario() {
   noEncontrado.value = false
   Object.keys(errors).forEach(k => delete errors[k as keyof FormData])
 
-  if (!esEdicion.value) {
+    if (!esEdicion.value) {
     form.nombreHistoria = ''
     form.usuarioEmail = ''
     form.quiero = ''
@@ -152,8 +194,11 @@ function cargarFormulario() {
 
   // Copiamos los requerimientos existentes a la lista local
   requerimientosLista.value = []
-  for (let i = 0; i < existente.requerimientos.length; i++) {
-    requerimientosLista.value.push(existente.requerimientos[i])
+    for (let i = 0; i < existente.requerimientos.length; i++) {
+    requerimientosLista.value.push({
+      ...existente.requerimientos[i],
+      estatus: estatusDe(existente.requerimientos[i])
+    })
   }
 }
 
@@ -360,18 +405,59 @@ function handleCancel() {
 
         <!-- TABLA INTERNA DE REQUERIMIENTOS -->
         <div class="field-full req-table-wrapper">
+          <div v-if="requerimientosLista.length > 0" class="checks-summary">
+            <div class="checks-text">
+              <strong>Checks:</strong>
+              {{ totalCompletados }} de {{ requerimientosLista.length }} completados
+              ({{ porcentajeAvance }}%) · {{ totalEnCurso }} en curso
+            </div>
+            <div class="checks-bar" role="progressbar" :aria-valuenow="porcentajeAvance" aria-valuemin="0" aria-valuemax="100">
+              <div class="checks-bar-fill" :style="{ width: porcentajeAvance + '%' }"></div>
+            </div>
+            <div class="checks-actions">
+              <button type="button" class="link-btn" @click="marcarTodos(true)">Marcar todos</button>
+              <button type="button" class="link-btn" @click="marcarTodos(false)">Desmarcar todos</button>
+            </div>
+          </div>
+
           <table class="req-table">
             <thead>
               <tr>
+                <th class="col-check">Check</th>
                 <th>Nombre</th>
                 <th>Descripción</th>
+                <th class="col-center">Estatus</th>
                 <th class="col-center">Acción</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="req in requerimientosLista" :key="req.id">
+              <tr v-for="req in requerimientosLista" :key="req.id" :class="{ 'req-done': estatusDe(req) === 'Completado' }">
+                <td class="col-check">
+                  <input
+                    :checked="estatusDe(req) === 'Completado'"
+                    type="checkbox"
+                    class="req-check"
+                    :aria-label="'Marcar como completado: ' + req.nombre"
+                    @change="alternarCheck(req)"
+                  />
+                </td>
                 <td class="req-name">{{ req.nombre }}</td>
                 <td class="req-desc">{{ req.descripcion }}</td>
+                <td class="col-center">
+                  <div class="estatus-group" role="group" :aria-label="'Estatus de ' + req.nombre">
+                    <button
+                      v-for="est in ESTATUS_REQUERIMIENTO"
+                      :key="est"
+                      type="button"
+                      class="estatus-btn"
+                      :class="[claseEstatus(est), { active: estatusDe(req) === est }]"
+                      :aria-pressed="estatusDe(req) === est"
+                      @click="cambiarEstatus(req, est)"
+                    >
+                      {{ est }}
+                    </button>
+                  </div>
+                </td>
                 <td class="col-center">
                   <button
                     type="button"
@@ -384,7 +470,7 @@ function handleCancel() {
                 </td>
               </tr>
               <tr v-if="requerimientosLista.length === 0">
-                <td colspan="3" class="empty-req-table">
+                <td colspan="5" class="empty-req-table">
                   No se han agregado requerimientos a esta historia. Haz clic en "Agregar Requerimiento".
                 </td>
               </tr>
@@ -451,7 +537,7 @@ function handleCancel() {
 <style scoped>
 .historias-form {
   width: 100%;
-  color: #5F0032;
+  color: #1e3a5f;
   text-align: left;
 }
 
@@ -476,7 +562,7 @@ function handleCancel() {
 }
 
 .header-icon {
-  color: #5F0032;
+  color: #1e3a5f;
   flex-shrink: 0;
   stroke-width: 2;
 }
@@ -485,7 +571,7 @@ function handleCancel() {
   margin: 0;
   font-size: 26px;
   font-weight: 800;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .header-text p {
@@ -505,9 +591,9 @@ function handleCancel() {
   gap: 7px;
   padding: 8px 15px;
   border-radius: 999px;
-  background: #FBEAF9;
-  border: 1px solid #F0CBEC;
-  color: #5F0032;
+  background: #f1f5fa;
+  border: 1px solid #d3deec;
+  color: #1e3a5f;
   text-decoration: none;
   font-size: 12px;
   font-weight: 700;
@@ -515,7 +601,7 @@ function handleCancel() {
 }
 
 .back-button:hover {
-  background: #F5D6F2;
+  background: #dde6f1;
   transform: translateX(-2px);
 }
 
@@ -540,7 +626,7 @@ function handleCancel() {
 
 .form-header h1 {
   margin: 0 0 6px;
-  color: #5F0032;
+  color: #f79d65;
   font-size: 26px;
   font-weight: 800;
   letter-spacing: 1px;
@@ -562,7 +648,7 @@ function handleCancel() {
 
 .section-divider h3 {
   margin: 0;
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 15px;
   font-weight: 800;
   text-transform: uppercase;
@@ -579,9 +665,9 @@ function handleCancel() {
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  background: #FBEAF9;
-  border: 1px solid #F0CBEC;
-  color: #5F0032;
+  background: #f1f5fa;
+  border: 1px solid #d3deec;
+  color: #1e3a5f;
   border-radius: 99px;
   font-size: 12px;
   font-weight: 700;
@@ -590,7 +676,7 @@ function handleCancel() {
 }
 
 .add-req-btn:hover {
-  background: #F5D6F2;
+  background: #dde6f1;
 }
 
 .form-grid {
@@ -627,7 +713,7 @@ function handleCancel() {
   font-size: 15px;
   padding: 6px 2px 8px;
   border: none;
-  border-bottom: 1.5px solid #4D6787;
+  border-bottom: 1.5px solid #5b7089;
   background: transparent;
   color: #1a1a1a;
   outline: none;
@@ -638,7 +724,7 @@ function handleCancel() {
   font: inherit;
   font-size: 14px;
   padding: 8px 10px;
-  border: 1.5px solid #4D6787;
+  border: 1.5px solid #5b7089;
   border-radius: 8px;
   background-color: #ffffff;
   color: #1a1a1a;
@@ -648,22 +734,22 @@ function handleCancel() {
 
 .field input:focus,
 .field textarea:focus {
-  border-bottom-color: #D46D25;
+  border-bottom-color: #0f766e;
 }
 
 .field .invalid {
-  border-color: #D46D25 !important;
+  border-color: #0f766e !important;
 }
 
 .error-text {
   margin-top: 6px;
-  color: #D46D25;
+  color: #0f766e;
   font-size: 13px;
 }
 
 /* TABLA INTERNA DE REQUERIMIENTOS */
 .req-table-wrapper {
-  border: 1px solid #eef6ee;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   overflow: hidden;
   margin-top: 6px;
@@ -678,7 +764,7 @@ function handleCancel() {
 .req-table th {
   padding: 10px;
   background: #f1f5f9;
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
@@ -696,6 +782,119 @@ function handleCancel() {
   font-weight: 700;
   width: 30%;
 }
+
+/* CHECKS DE REQUERIMIENTOS */
+.checks-summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13px;
+  color: #334155;
+}
+
+.checks-bar {
+  flex: 1;
+  min-width: 120px;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.checks-bar-fill {
+  height: 100%;
+  background: #0f766e;
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.checks-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.link-btn {
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f766e;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+.col-check {
+  width: 64px;
+  text-align: center !important;
+}
+
+.req-check {
+  width: 18px;
+  height: 18px;
+  accent-color: #0f766e;
+  cursor: pointer;
+}
+
+/* BOTONES DE ESTATUS (NO INICIADO / EN CURSO / COMPLETADO) */
+.estatus-group {
+  display: inline-flex;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.estatus-btn {
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #64748b;
+  background: #ffffff;
+  border: none;
+  border-right: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.estatus-btn:last-child {
+  border-right: none;
+}
+
+.estatus-btn:hover {
+  background: #f1f5f9;
+}
+
+.estatus-btn.st-pendiente.active {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.estatus-btn.st-curso.active {
+  background: #dbe7f5;
+  color: #1e3a5f;
+}
+
+.estatus-btn.st-completado.active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.req-done .req-name,
+.req-done .req-desc {
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
 
 .empty-req-table {
   text-align: center;
@@ -754,12 +953,12 @@ function handleCancel() {
 
 .submit-btn {
   color: #ffffff;
-  background: #99154E;
+  background: #2c5282;
 }
 
 .cancel-btn {
-  color: #5F0032;
-  background: #E8F9A2;
+  color: #1e3a5f;
+  background: #dbe7f5;
 }
 
 /* MODAL DE REQUERIMIENTOS */
@@ -784,7 +983,7 @@ function handleCancel() {
 
 .req-modal h3 {
   margin: 0 0 4px;
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 18px;
   font-weight: 800;
 }
@@ -824,13 +1023,13 @@ function handleCancel() {
 
 .modal-field input:focus,
 .modal-field textarea:focus {
-  border-color: #99154E;
+  border-color: #2c5282;
 }
 
 .modal-error {
   display: block;
   font-size: 12px;
-  color: #D46D25;
+  color: #0f766e;
   margin-bottom: 12px;
 }
 
@@ -854,12 +1053,12 @@ function handleCancel() {
 }
 
 .modal-cancel-btn {
-  background: #E8F9A2;
-  color: #5F0032;
+  background: #dbe7f5;
+  color: #1e3a5f;
 }
 
 .confirm-req-btn {
-  background: #99154E;
+  background: #2c5282;
   color: #ffffff;
 }
 

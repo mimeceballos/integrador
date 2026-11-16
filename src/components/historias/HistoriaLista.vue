@@ -1,16 +1,18 @@
 <script setup lang="ts">
+
 import { ref, computed, inject } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import type { Ref } from 'vue'
-import { BookOpen, Plus, Pencil, Eye, EyeOff, RotateCcw } from 'lucide-vue-next'
+import { BookOpen, Plus, Pencil, Eye, EyeOff, RotateCcw, Trash2 } from 'lucide-vue-next'
 
 import HeaderStatsCard from '../../components/Encabezado.vue'
 import ListFooter from '../../components/Footer.vue'
 
-import { historias } from '../../data/historias'
+import { historias, eliminarHistoria, contarCompletados, puedeEliminarse } from '../../data/historias'
 import type { HistoriaUsuario } from '../../data/historias'
 import { sistemas } from '../../data/sistemas'
 import { usuarios } from '../../data/usuarios'
+
 
 const router = useRouter()
 
@@ -84,6 +86,35 @@ function ejecutarAccion() {
 
 function cancelarAccion() {
   historiaAAccionar.value = null
+}
+
+/* ELIMINAR HISTORIA (CON CONFIRMACIÓN) */
+const historiaAEliminar = ref<HistoriaUsuario | null>(null)
+
+function confirmarEliminar(historia: HistoriaUsuario) {
+  // Solo se puede eliminar si todos los requerimientos están "Completado"
+  if (!canWrite.value || !puedeEliminarse(historia)) return
+  historiaAEliminar.value = historia
+}
+
+// Texto del botón según si la historia se puede eliminar o no
+function tituloEliminar(historia: HistoriaUsuario): string {
+  if (puedeEliminarse(historia)) return 'Eliminar historia'
+  return (
+    'Para eliminar, todos los requerimientos deben estar completados (' +
+    contarCompletados(historia) + ' de ' + historia.requerimientos.length + ')'
+  )
+}
+
+function ejecutarEliminar() {
+  if (historiaAEliminar.value && canWrite.value && puedeEliminarse(historiaAEliminar.value)) {
+    eliminarHistoria(historiaAEliminar.value.id)
+    historiaAEliminar.value = null
+  }
+}
+
+function cancelarEliminar() {
+  historiaAEliminar.value = null
 }
 
 function verDetalles(historia: HistoriaUsuario) {
@@ -166,6 +197,7 @@ function irAEditar(id: number) {
             <th class="col-center">Fecha de Captura</th>
             <th class="col-center">Capturado Por</th>
             <th class="col-center">Rol</th>
+            <th class="col-center">Eliminar</th>
             <th class="col-center">Acciones</th>
           </tr>
         </thead>
@@ -200,6 +232,22 @@ function irAEditar(id: number) {
     {{ obtenerRolCapturador(historia) }}
   </span>
 </td>
+
+            <!-- COLUMNA ELIMINAR (CON CONFIRMACIÓN) -->
+            <td class="col-center">
+              <button
+                v-if="canWrite"
+                type="button"
+                class="action-btn delete-btn"
+                :class="{ 'btn-bloqueado': !puedeEliminarse(historia) }"
+                :disabled="!puedeEliminarse(historia)"
+                :title="tituloEliminar(historia)"
+                @click="confirmarEliminar(historia)"
+              >
+                <Trash2 :size="15" />
+              </button>
+              <span v-else class="no-action">—</span>
+            </td>
 
             <td class="col-center">
               <div class="acciones">
@@ -238,7 +286,7 @@ function irAEditar(id: number) {
           </tr>
 
           <tr v-if="historiasFiltradas.length === 0">
-            <td colspan="6" class="empty-state">
+            <td colspan="7" class="empty-state">
               <div class="empty-icon">
                 <BookOpen :size="34" />
               </div>
@@ -258,9 +306,9 @@ function irAEditar(id: number) {
 
     <!-- componente fooder -->
     <ListFooter 
-  nota="Las historias mostradas corresponden únicamente al proyecto seleccionado."
-  :currentPermission="permisoHistorias"
-/>
+      nota="Las historias mostradas corresponden únicamente al proyecto seleccionado."
+      :currentPermission="permisoHistorias"
+    />
 
     <!-- MODAL DE DETALLE COMPLETO -->
 <div v-if="historiaDetalle" class="modal-overlay" @click.self="cerrarDetalles">
@@ -343,13 +391,39 @@ function irAEditar(id: number) {
         </div>
       </div>
     </div>
+
+    <!-- MODAL DE CONFIRMACIÓN (ELIMINAR) -->
+    <div v-if="historiaAEliminar" class="modal-overlay" @click.self="cancelarEliminar">
+      <div class="confirmation-modal">
+        <div class="modal-icon">
+          <Trash2 :size="24" />
+        </div>
+        <h3>Eliminar historia</h3>
+        <p>
+          ¿Estás seguro de que deseas eliminar la historia
+          <strong>"{{ historiaAEliminar.nombreHistoria }}"</strong>?
+        </p>
+        <p class="modal-warning">
+          Esta acción no se puede deshacer y también se eliminarán sus
+          {{ historiaAEliminar.requerimientos.length }} requerimiento(s).
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" @click="cancelarEliminar">Cancelar</button>
+          <button type="button" class="confirm-action-btn confirm-delete-btn" @click="ejecutarEliminar">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+
   </section>
 </template>
 
 <style scoped>
+
 .lista-historias {
   width: 100%;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .list-header {
@@ -368,7 +442,7 @@ function irAEditar(id: number) {
 }
 
 .header-icon {
-  color: #5F0032;
+  color: #1e3a5f;
   flex-shrink: 0;
   stroke-width: 2;
 }
@@ -377,7 +451,7 @@ function irAEditar(id: number) {
   margin: 0;
   font-size: 26px;
   font-weight: 800;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .header-text p {
@@ -398,9 +472,10 @@ function irAEditar(id: number) {
   justify-content: center;
   gap: 6px;
   padding: 12px 22px;
-  background: #99154E;
+ background: #ffbf69;
   color: #ffffff;
   border-radius: 15px;
+  border: 2px solid #ff9f1c;
   text-decoration: none;
   font-size: 13px;
   font-weight: 700;
@@ -452,7 +527,7 @@ function irAEditar(id: number) {
 
 .toggle-tab.active {
   background: #ffffff;
-  color: #5F0032;
+  color: #1e3a5f;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
@@ -460,7 +535,7 @@ function irAEditar(id: number) {
 .table-container {
   width: 100%;
   overflow-x: auto;
-  border: 1px solid #eef6ee;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
 }
 
@@ -472,13 +547,13 @@ function irAEditar(id: number) {
 }
 
 .historias-table thead {
-  background: #d1d0d0;
+  background: #dee2e6;
 }
 
 .historias-table th {
   padding: 13px 12px;
   text-align: left;
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
@@ -488,7 +563,7 @@ function irAEditar(id: number) {
 
 .historias-table td {
   padding: 14px 12px;
-  border-top: 1px solid #eef6ee;
+  border-top: 1px solid #e2e8f0;
   color: #4a5563;
   font-size: 12px;
   vertical-align: middle;
@@ -508,15 +583,13 @@ function irAEditar(id: number) {
 }
 
 .historias-table tbody tr:hover {
-  background-color: #FDF5FC;
+  background-color: #f8fafc;
 }
 
 .id-badge {
   display: inline-block;
   padding: 4px 7px;
-  border-radius: 6px;
-  background: #F1C0EC;
-  color: #5F0032;
+  color: #1e3a5f;
   font-weight: 800;
 }
 
@@ -571,12 +644,12 @@ function irAEditar(id: number) {
 }
 
 .view-btn {
-  background: #F1C0EC;
-  color: #5F0032;
+  background: #c9d8ea;
+  color: #1e3a5f;
 }
 
 .view-btn:hover {
-  background: #E9A8E3;
+  background: #a9bfd9;
   transform: translateY(-1px);
 }
 
@@ -600,6 +673,33 @@ function irAEditar(id: number) {
   transform: translateY(-1px);
 }
 
+.delete-btn {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.delete-btn:hover {
+  background: #fecaca;
+  transform: translateY(-1px);
+}
+
+.action-btn:disabled,
+.btn-bloqueado {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-bloqueado:hover {
+  background: #f1f5f9;
+  transform: none;
+}
+
+.no-action {
+  color: #94a3b8;
+}
+
 .restore-btn {
   background: #d1fae5;
   color: #065f46;
@@ -617,12 +717,12 @@ function irAEditar(id: number) {
 
 .empty-icon {
   margin-bottom: 10px;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .empty-state h3 {
   margin: 0 0 7px;
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 16px;
 }
 
@@ -683,7 +783,7 @@ function irAEditar(id: number) {
 .detail-header h3 {
   margin: 0 0 4px 0;
   font-size: 18px;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .detail-author {
@@ -692,7 +792,7 @@ function irAEditar(id: number) {
 }
 
 .role-text {
-  color: #99154E;
+  color: #2c5282;
   font-weight: 700;
 }
 
@@ -704,7 +804,7 @@ function irAEditar(id: number) {
   margin: 0 0 6px 0;
   font-size: 14px;
   font-weight: 800;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .section-text {
@@ -756,7 +856,7 @@ function irAEditar(id: number) {
 
 .cancel-btn {
   background: #eef2f6;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .cancel-btn:hover {
@@ -779,6 +879,15 @@ function irAEditar(id: number) {
 
 .confirm-action-btn:hover {
   background: #e88080;
+}
+
+.confirm-action-btn.confirm-delete-btn {
+  background: #991b1b;
+  color: #ffffff;
+}
+
+.confirm-action-btn.confirm-delete-btn:hover {
+  background: #7f1d1d;
 }
 
 .confirm-action-btn.restore-action-btn {

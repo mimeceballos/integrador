@@ -53,7 +53,7 @@ const canWrite = computed(() => {
 .sistemas-module {
   width: 100%;
   min-height: calc(100vh - 134px);
-  color: #5F0032;
+  color: #1e3a5f;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -68,7 +68,7 @@ const canWrite = computed(() => {
 
 .module-header h1 {
   margin: 0 0 6px;
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 28px;
   font-weight: 800;
   letter-spacing: 0.3px;
@@ -88,7 +88,7 @@ const canWrite = computed(() => {
   justify-content: center;
   gap: 6px;
   padding: 12px 22px;
-  background-color: #99154E;
+  background-color: #2c5282;
   color: #ffffff;
   border: none;
   border-radius: 999px;
@@ -117,8 +117,8 @@ const canWrite = computed(() => {
   gap: 8px;
   margin-bottom: 18px;
   padding: 5px;
-  background-color: #FBEAF9;
-  border: 1px solid #F0CBEC;
+  background-color: #f1f5fa;
+  border: 1px solid #d3deec;
   border-radius: 12px;
   width: fit-content;
 }
@@ -128,7 +128,7 @@ const canWrite = computed(() => {
   align-items: center;
   padding: 9px 15px;
   border-radius: 8px;
-  color: #5F0032;
+  color: #1e3a5f;
   text-decoration: none;
   font-size: 13px;
   font-weight: 700;
@@ -138,12 +138,12 @@ const canWrite = computed(() => {
 }
 
 .module-nav-link:hover {
-  background-color: #F5D6F2;
+  background-color: #dde6f1;
 }
 
 .module-nav-link.router-link-active {
-  background-color: #E8F9A2;
-  color: #5F0032;
+  background-color: #dbe7f5;
+  color: #1e3a5f;
 }
 
 /* CONTENEDOR DE LA VISTA INTERNA */

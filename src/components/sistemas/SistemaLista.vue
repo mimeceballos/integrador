@@ -164,7 +164,9 @@ function cancelarEliminacion() {
                 @click="toggleProyecto(sistema.id)"
                 :title="sistemaSeleccionadoId === sistema.id ? 'Desactivar proyecto' : 'Activar proyecto'"
               >
-                <span class="checkmark-icon">✓</span>
+                <span class="checkmark-icon">
+                  <i class="fa fa-check" aria-hidden="true"></i>
+                </span>
               </button>
             </td>
 
@@ -278,7 +280,7 @@ function cancelarEliminacion() {
 <style scoped>
 .lista-sistemas {
   width: 100%;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .col-center {
@@ -313,7 +315,7 @@ function cancelarEliminacion() {
 }
 
 .header-icon {
-  color: #5F0032;
+  color: #1e3a5f;
   flex-shrink: 0;
   stroke-width: 2;
 }
@@ -322,7 +324,7 @@ function cancelarEliminacion() {
   margin: 0;
   font-size: 26px;
   font-weight: 800;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .header-text p {
@@ -343,9 +345,10 @@ function cancelarEliminacion() {
   justify-content: center;
   gap: 6px;
   padding: 12px 22px;
-  background: #99154E;
+  background: #ffbf69;
   color: #ffffff;
   border-radius: 15px;
+  border: 2px solid #ff9f1c;
   text-decoration: none;
   font-size: 13px;
   font-weight: 700;
@@ -368,7 +371,7 @@ function cancelarEliminacion() {
 .table-container {
   width: 100%;
   overflow-x: auto;
-  border: 1px solid #eef6ee;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
 }
 
@@ -380,13 +383,13 @@ function cancelarEliminacion() {
 }
 
 .sistemas-table thead {
-  background: #d1d0d0;
+  background: #dee2e6;
 }
 
 .sistemas-table th {
   padding: 13px 12px;
   text-align: left;
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
@@ -396,8 +399,8 @@ function cancelarEliminacion() {
 
 .sistemas-table td {
   padding: 14px 12px;
-  border-top: 1px solid #eef6ee;
-  color: #4a5563;
+  border-top: 1px solid #e2e8f0;
+  color: #5b634a;
   font-size: 12px;
   vertical-align: middle;
 }
@@ -410,7 +413,7 @@ function cancelarEliminacion() {
 .checkbox-box {
   width: 22px;
   height: 22px;
-  border: 2px solid #5F0032;
+  border: 2px solid #1e3a5f;
   border-radius: 6px;
   background-color: #ffffff;
   display: inline-flex;
@@ -423,12 +426,12 @@ function cancelarEliminacion() {
 }
 
 .checkbox-box:hover {
-  background-color: #FBEAF9;
+  background-color: #f1f5fa;
 }
 
 .checkbox-box.is-checked {
-  background-color: #5F0032;
-  border-color: #5F0032;
+  background-color: #1e3a5f;
+  border-color: #1e3a5f;
 }
 
 .checkmark-icon {
@@ -444,19 +447,17 @@ function cancelarEliminacion() {
 }
 
 .sistemas-table tbody tr.row-active {
-  background-color: #FBEAF9;
+  background-color: #f1f5fa;
 }
 
 .sistemas-table tbody tr:hover {
-  background-color: #FDF5FC;
+  background-color: #f8fafc;
 }
 
 .id-badge {
   display: inline-block;
   padding: 4px 7px;
-  border-radius: 6px;
-  background: #F1C0EC;
-  color: #5F0032;
+  color: #1e3a5f;
   font-weight: 800;
 }
 
@@ -489,8 +490,8 @@ function cancelarEliminacion() {
 }
 
 .estado-badge.activo {
-  background: #d9efbd;
-  color: #2d5a1e;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .estado-badge.desarrollo {
@@ -525,12 +526,12 @@ function cancelarEliminacion() {
 }
 
 .view-btn {
-  background: #F1C0EC;
-  color: #5F0032;
+  background: #c9d8ea;
+  color: #1e3a5f;
 }
 
 .view-btn:hover {
-  background: #E9A8E3;
+  background: #a9bfd9;
   transform: translateY(-1px);
 }
 
@@ -566,7 +567,7 @@ function cancelarEliminacion() {
 
 .empty-state h3 {
   margin: 0 0 7px;
-  color: #5F0032;
+  color: #1e3a5f;
   font-size: 16px;
 }
 
@@ -647,7 +648,7 @@ function cancelarEliminacion() {
 
 .cancel-btn {
   background: #eef2f6;
-  color: #5F0032;
+  color: #1e3a5f;
 }
 
 .cancel-btn:hover {
