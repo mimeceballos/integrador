@@ -1,8 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LogIn from '../components/LogIn.vue' 
 import inicio from '../views/inicio.vue' 
+import { verificarSesionActiva } from '../utils/cookies'
 
-// NUEVO: Importación de los componentes de Historias de Usuario desde src/historias/
+//Importación de los componentes de Historias de Usuario desde src/historias/
 import HistoriaLista from '../components/historias/HistoriaLista.vue'
 import HistoriaForm from '../components/historias/HistoriaForm.vue'
 
@@ -23,6 +24,7 @@ const routes = [
     path: '/portal', 
     name: 'portal', 
     component: inicio, 
+    meta: { requiereAuth: true },
     children: [
       // Al entrar a /portal, redirige directo a la lista de sistemas
       {
@@ -99,6 +101,21 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+router.beforeEach((to, from, next) => {
+  const sesionValida = verificarSesionActiva()
+
+  // Si intenta entrar a /portal (o cualquier hijo) sin cookie válida -> manda al login ('/')
+  if (to.matched.some(record => record.meta.requiereAuth) && !sesionValida) {
+    next('/')
+  } 
+  else if (to.path === '/' && sesionValida) {
+    next('/portal')
+  } 
+  else {
+    next()
+  }
 })
 
 export default router

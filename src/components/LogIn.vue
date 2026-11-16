@@ -3,6 +3,7 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useReCaptcha } from 'vue-recaptcha-v3' // hook de reCAPTCHA
+import { setCookie } from '../utils/cookies' //cookies
 
 
 // Estructura para los datos recopilados en el formulario de inicio de sesión
@@ -141,6 +142,9 @@ async function handleSubmit(): Promise<void> {
     } else if (account.pass !== form.password) {
       throw new Error('La contraseña es incorrecta')
     }
+
+    setCookie('usuario', account.profile.email, 15)
+    
 //guarda el perfil en el almacenamiento local del navegador
     localStorage.setItem('auth_user', JSON.stringify(account.profile))
 
