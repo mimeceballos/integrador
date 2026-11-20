@@ -1,23 +1,26 @@
 <script setup lang="ts">
-// Importación de funciones reactivas de Vue y utilidades de Vue Router
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useReCaptcha } from 'vue-recaptcha-v3' // hook de reCAPTCHA
-import { setCookie } from '../utils/cookies' //cookies
+import { useReCaptcha } from 'vue-recaptcha-v3'
+import { setCookie } from '../utils/cookies'
+import {
+  usuarios,
+  obtenerUsuarioPorEmail,
+  cambiarPasswordUsuario,
+  type Usuario,
+  type PermissionCode
+} from '../data/usuarios'
 
-
-// Estructura para los datos recopilados en el formulario de inicio de sesión
 interface LoginForm {
   email: string
   password: string
 }
-// Estructura de los datos que se enviarán al emitir un evento de éxito
+
 interface LoginPayload {
   email: string
 }
 
-// 1 = Desactivo/Oculto, 2 = Lectura, 3 = Escritura
-export type PermissionCode = 1 | 2 | 3
+export type { PermissionCode }
 
 export interface UserProfile {
   email: string
@@ -30,49 +33,13 @@ export interface UserProfile {
     historias: PermissionCode
   }
 }
-// Definición de eventos que este componente puede notificar a su padre
+
 const emit = defineEmits<{
   (e: 'login-success', payload: LoginPayload): void
 }>()
 
 const router = useRouter()
-
-// 2 - Se guarda la instancia completa de reCAPTCHA
 const recaptchaInstance = useReCaptcha()
-
-// --- MINI BASE ---
-const MOCK_USERS: Record<string, { pass: string; profile: UserProfile }> = {
-  // Usuario 1: Todos los permisos (3)
-  'administrador1@gmail.com': {
-    pass: 'Admin123',
-    profile: {
-      email: 'administrador1@gmail.com',
-      name: 'Alejandro Góngora',
-      roleName: 'Administrador',
-      permissions: { sistemas: 3, usuarios: 3, roles: 3, historias: 3 }
-    }
-  },
-  // Usuario 2: Permisos de Escritura, Lectura y Desactivado
-  'usr2@gmail.com': {
-    pass: 'usr123',
-    profile: {
-      email: 'usr2@gmail.com',
-      name: 'Juan Perez',
-      roleName: 'Usuario del Sistema',
-      permissions: { sistemas: 3, usuarios: 2, roles: 1, historias: 2 }
-    }
-  },
-  // Usuario 3: Solo Lectura general (2) o Desactivados (1)
-  'usr3@gmail.com': {
-    pass: 'usr123',
-    profile: {
-      email: 'usr3@gmail.com',
-      name: 'María Perez',
-      roleName: 'Externo',
-      permissions: { sistemas: 2, usuarios: 2, roles: 1, historias: 1 }
-    }
-  }
-}
 
 const form = reactive<LoginForm>({
   email: '',
@@ -80,13 +47,17 @@ const form = reactive<LoginForm>({
 })
 
 const errors = reactive<Partial<Record<keyof LoginForm, string>>>({})
-// Variables de estado auxiliares
-const showPassword = ref(false) // Controla si se oculta o muestra la contraseña
-const isLoading = ref(false)    // Indica si el envío está en proceso
-const serverError = ref('')     // Almacena errores generales de autenticación
-const successMessage = ref('')  // Almacena mensajes de éxito
+const showPassword = ref(false)
+const isLoading = ref(false)
+const serverError = ref('')
+const successMessage = ref('')
 
-//valida entrada de datos
+// --- PRIMER INICIO DE SESIÓN (CAMBIO DE CONTRASEÑA) ---
+const usuarioPendienteCambio = ref<Usuario | null>(null)
+const nuevaPassword = ref('')
+const confirmarPassword = ref('')
+const passwordChangeError = ref('')
+
 function validate(): boolean {
   errors.email = ''
   errors.password = ''
@@ -108,6 +79,26 @@ function validate(): boolean {
   return valid
 }
 
+// completar la sesión y redirigir
+function completarInicioSesion(account: Usuario) {
+  const userProfile: UserProfile = {
+    email: account.email,
+    name: account.nombreCompleto,
+    roleName: account.roleName,
+    permissions: account.permissions
+  }
+
+  setCookie('usuario', userProfile.email, 15)
+  localStorage.setItem('auth_user', JSON.stringify(userProfile))
+  window.dispatchEvent(new Event('auth-change'))
+
+  successMessage.value = 'usuario correcto'
+  emit('login-success', { email: account.email })
+
+  setTimeout(() => {
+    router.push('/portal')
+  }, 600)
+}
 
 async function handleSubmit(): Promise<void> {
   serverError.value = ''
@@ -118,14 +109,11 @@ async function handleSubmit(): Promise<void> {
   isLoading.value = true
 
   try {
-    // 3 - Comprueba que la instancia esté lista
     if (!recaptchaInstance) {
       throw new Error('reCAPTCHA no está inicializado correctamente.')
     }
 
-    // 3. Desestructura las funciones ahora que TypeScript sabe que existen
     const { executeRecaptcha, recaptchaLoaded } = recaptchaInstance
-
     await recaptchaLoaded()
     const token = await executeRecaptcha('login')
 
@@ -134,29 +122,28 @@ async function handleSubmit(): Promise<void> {
     }
 
     await new Promise((resolve) => setTimeout(resolve, 600))
-//busca el usuario en la base de datos
-    const account = MOCK_USERS[form.email.trim()]
+
+    const account = obtenerUsuarioPorEmail(form.email)
 
     if (!account) {
       throw new Error('El correo electrónico es incorrecto')
-    } else if (account.pass !== form.password) {
+    } else if (account.password !== form.password) {
       throw new Error('La contraseña es incorrecta')
+    } else if (!account.activo) {
+      throw new Error('Este usuario está desactivado. Contacta al administrador.')
     }
 
-    setCookie('usuario', account.profile.email, 15)
-    
-//guarda el perfil en el almacenamiento local del navegador
-    localStorage.setItem('auth_user', JSON.stringify(account.profile))
+    // USUARIO NEUVO, PEDIR CAMBIO DE CONTRASEÑA
+    if (account.requiereCambioPassword) {
+      usuarioPendienteCambio.value = account
+      nuevaPassword.value = ''
+      confirmarPassword.value = ''
+      passwordChangeError.value = ''
+      return
+    }
 
-    // NOTIFICAR A APP.VUE QUE LA SESIÓN CAMBIÓ
-    window.dispatchEvent(new Event('auth-change'))
-
-    successMessage.value = 'usuario correcto'
-    emit('login-success', { email: form.email })
-//redirecciona al inicio ya validado
-    setTimeout(() => {
-      router.push('/portal')
-    }, 600)
+    // Si ya tiene su propia contraseña, entra normal
+    completarInicioSesion(account)
   } catch (err) {
     serverError.value =
       err instanceof Error ? err.message : 'Ocurrió un error al iniciar sesión'
@@ -165,55 +152,80 @@ async function handleSubmit(): Promise<void> {
   }
 }
 
+function handleGuardarNuevaPassword(): void {
+  passwordChangeError.value = ''
+
+  if (!usuarioPendienteCambio.value) return
+
+  if (nuevaPassword.value.length < 6) {
+    passwordChangeError.value = 'La nueva contraseña debe tener al menos 6 caracteres.'
+    return
+  }
+
+  if (nuevaPassword.value === usuarioPendienteCambio.value.password) {
+    passwordChangeError.value = 'La nueva contraseña debe ser diferente a la temporal.'
+    return
+  }
+
+  if (nuevaPassword.value !== confirmarPassword.value) {
+    passwordChangeError.value = 'Las contraseñas no coinciden.'
+    return
+  }
+
+  const cuenta = usuarioPendienteCambio.value
+  cambiarPasswordUsuario(cuenta.email, nuevaPassword.value)
+
+  usuarioPendienteCambio.value = null
+  completarInicioSesion(cuenta)
+}
+
+function cancelarCambioPassword(): void {
+  usuarioPendienteCambio.value = null
+  form.password = ''
+  passwordChangeError.value = ''
+}
+
 function fillCredentials(email: string): void {
-  const account = MOCK_USERS[email]
+  const account = obtenerUsuarioPorEmail(email)
   if (!account) return
-  form.email = email
-  form.password = account.pass
+
+  usuarioPendienteCambio.value = null
+  form.email = account.email
+  form.password = account.password
 
   errors.email = ''
   errors.password = ''
   serverError.value = ''
   successMessage.value = ''
 }
-
 </script>
 
 <template>
-  
   <section class="login-page">
-
     <div class="page-header">
       <h2 class="page-title">Administrador de Proyectos</h2>
     </div>
 
-    
-    <form class="login-card" novalidate @submit.prevent="handleSubmit">
+    <!--LOGIN NORMAL -->
+    <form
+      v-if="!usuarioPendienteCambio"
+      class="login-card"
+      novalidate
+      @submit.prevent="handleSubmit"
+    >
       <div class="login-form-side">
         <h1 class="login-title">Login de Usuarios</h1>
         <p class="login-subtitle">Ingrese sus datos</p>
 
         <div class="quick-login">
           <button
+            v-for="user in usuarios"
+            :key="user.id"
             type="button"
             class="quick-login-btn"
-            @click="fillCredentials('administrador1@gmail.com')"
+            @click="fillCredentials(user.email)"
           >
-          Administrador
-          </button>
-          <button
-            type="button"
-            class="quick-login-btn"
-            @click="fillCredentials('usr2@gmail.com')"
-          >
-          Usuario del Sistema
-          </button>
-          <button
-            type="button"
-            class="quick-login-btn"
-            @click="fillCredentials('usr3@gmail.com')"
-          >
-          Externo
+            {{ user.nombreCompleto.split(' ')[0] }} ({{ user.roleName }})
           </button>
         </div>
 
@@ -255,17 +267,64 @@ function fillCredentials(email: string): void {
           <span v-if="errors.password" class="error-text">{{ errors.password }}</span>
         </div>
 
-        <!-- Mensajes de error específicos -->
         <p v-if="serverError" class="server-error">{{ serverError }}</p>
-
-        <!-- Mensaje de éxito -->
         <p v-if="successMessage" class="success-message">{{ successMessage }}</p>
-<!--boton de envío -->
+
         <button type="submit" class="submit-btn" :disabled="isLoading">
           {{ isLoading ? 'Ingresando...' : 'Login' }}
         </button>
       </div>
+    </form>
 
+    <!-- CAMBIO DE CONTRASEÑA (SOLO USUARIOS NUEVOS) -->
+    <form
+      v-else
+      class="login-card"
+      novalidate
+      @submit.prevent="handleGuardarNuevaPassword"
+    >
+      <div class="login-form-side">
+        <h1 class="login-title">Nueva Contraseña</h1>
+        <p class="login-subtitle">
+          Hola {{ usuarioPendienteCambio.nombreCompleto }}, por seguridad cambia tu contraseña temporal.
+        </p>
+
+        <div class="field">
+          <label for="new-password">Nueva Contraseña</label>
+          <input
+            id="new-password"
+            v-model="nuevaPassword"
+            type="password"
+            placeholder="Mínimo 6 caracteres"
+          />
+        </div>
+
+        <div class="field">
+          <label for="confirm-password">Confirmar Contraseña</label>
+          <input
+            id="confirm-password"
+            v-model="confirmarPassword"
+            type="password"
+            placeholder="Repite tu nueva contraseña"
+          />
+        </div>
+
+        <p v-if="passwordChangeError" class="server-error">{{ passwordChangeError }}</p>
+        <p v-if="successMessage" class="success-message">{{ successMessage }}</p>
+
+        <button type="submit" class="submit-btn">
+          Guardar y Entrar
+        </button>
+
+        <button
+          type="button"
+          class="quick-login-btn"
+          style="margin-top: 12px; width: 100%;"
+          @click="cancelarCambioPassword"
+        >
+          Volver al Login
+        </button>
+      </div>
     </form>
   </section>
 </template>
@@ -465,8 +524,7 @@ function fillCredentials(email: string): void {
   border-radius: 999px;
   padding: 13px;
   cursor: pointer;
-  box-shadow: 0 0px 20px -6px rgb(255, 230, 230)
-  ;
+  box-shadow: 0 0px 20px -6px rgb(255, 230, 230);
   transition: opacity 0.2s, transform 0.15s;
 }
 
@@ -480,7 +538,6 @@ function fillCredentials(email: string): void {
   cursor: not-allowed;
 }
 
-/* BOTONES NUEVOS */
 .quick-login {
   display: flex;
   gap: 8px;
