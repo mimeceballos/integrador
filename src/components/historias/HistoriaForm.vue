@@ -9,7 +9,7 @@ import HeaderStatsCard from '../../components/Encabezado.vue'
 
 // Importamos datos de Sistemas, Usuarios e Historias
 import { sistemas } from '../../data/sistemas'
-import { usuarios } from '../../data/usuarios'
+import { usuarios, usuariosDelProyecto } from '../../data/usuarios'
 import {
   agregarHistoria,
   actualizarHistoria,
@@ -49,7 +49,7 @@ const metodologiaProyecto = computed(() => {
 
 // Lista de participantes activos para el combobox
 const participantesDisponibles = computed(() => {
-  return usuarios.value.filter(u => u.activo)
+  return usuariosDelProyecto(proyectoActivoId.value).filter(u => u.activo)
 })
 
 /* MODO DE FORMULARIO: CREAR O EDITAR */

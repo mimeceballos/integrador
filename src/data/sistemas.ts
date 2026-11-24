@@ -5,20 +5,6 @@ import { ref } from 'vue'
  * Aquí definimos los tipos de datos para que TypeScript no nos marque error.
  * ========================================================================= */
 
-export interface InventarioItem {
-  nombre: string
-  cantidad: number
-  categoria: string
-  estado: string
-}
-
-export interface Empleado {
-  nombre: string
-  puesto: string
-  departamento: string
-  participacion: string
-}
-
 // Representa la estructura de cada Sistema o Proyecto registrado
 export interface Sistema {
   id: number
@@ -29,13 +15,8 @@ export interface Sistema {
   metodologia: string
   fechaInicio: string
   fechaFin: string
-  departamento: string
-  objetivo: string
-  presupuesto: number
   fechaCreacion: string
   fechaActualizacion: string
-  inventario: InventarioItem[]
-  empleados: Empleado[]
 
   // Agregamos esta propiedad opcional para saber qué opciones del Navbar habilita este proyecto.
   // Ejemplo: ['usuarios', 'historias']
@@ -57,19 +38,10 @@ export const sistemas = ref<Sistema[]>([
     metodologia: 'Scrum',
     fechaInicio: '15/08/2026',
     fechaFin: '15/12/2026',
-    departamento: 'Recursos Humanos',
-    objetivo: 'Centralizar la información de los empleados.',
-    presupuesto: 150000,
     fechaCreacion: '15/08/2026',
     fechaActualizacion: '20/09/2026',
     // Este proyecto solo permite ver "Usuarios" e "Historias" en el Navbar
-    opcionesNavbar: ['usuarios', 'roles', 'historias'],
-    inventario: [
-      { nombre: 'Computadoras de escritorio', cantidad: 12, categoria: 'Equipo de cómputo', estado: 'Disponible' }
-    ],
-    empleados: [
-      { nombre: 'Laura Méndez', puesto: 'Jefa de RRHH', departamento: 'Recursos Humanos', participacion: 'Responsable' }
-    ]
+    opcionesNavbar: ['usuarios', 'roles', 'historias']
   },
   {
     id: 2,
@@ -80,19 +52,10 @@ export const sistemas = ref<Sistema[]>([
     metodologia: 'Kanban',
     fechaInicio: '01/09/2026',
     fechaFin: '30/11/2026',
-    departamento: 'Almacén',
-    objetivo: 'Mejorar el control de productos.',
-    presupuesto: 95000,
     fechaCreacion: '01/09/2026',
     fechaActualizacion: '22/09/2026',
     // Este proyecto permite ver "Usuarios", "Roles" e "Historias" (Todo activo)
-    opcionesNavbar: ['usuarios', 'roles', 'historias'],
-    inventario: [
-      { nombre: 'Lectores de código de barras', cantidad: 8, categoria: 'Equipo', estado: 'Disponible' }
-    ],
-    empleados: [
-      { nombre: 'Carlos Ramírez', puesto: 'Jefe de Almacén', departamento: 'Almacén', participacion: 'Responsable' }
-    ]
+    opcionesNavbar: ['usuarios', 'roles', 'historias']
   },
   {
     id: 3,
@@ -103,15 +66,10 @@ export const sistemas = ref<Sistema[]>([
     metodologia: 'Cascada',
     fechaInicio: '10/07/2026',
     fechaFin: '10/10/2026',
-    departamento: 'Ventas',
-    objetivo: 'Registrar las operaciones comerciales.',
-    presupuesto: 210000,
     fechaCreacion: '10/07/2026',
     fechaActualizacion: '18/09/2026',
     // Este proyecto solo habilita "Roles" e "Historias"
-    opcionesNavbar: ['usuarios', 'roles', 'historias'],
-    inventario: [],
-    empleados: []
+    opcionesNavbar: ['usuarios', 'roles', 'historias']
   },
   {
     id: 4,
@@ -122,14 +80,9 @@ export const sistemas = ref<Sistema[]>([
     metodologia: 'Scrum',
     fechaInicio: '05/08/2026',
     fechaFin: '05/01/2027',
-    departamento: 'Atención al Cliente',
-    objetivo: 'Centralizar las solicitudes de los clientes.',
-    presupuesto: 120000,
     fechaCreacion: '05/08/2026',
     fechaActualizacion: '21/09/2026',
-    opcionesNavbar: ['usuarios', 'roles', 'historias'],
-    inventario: [],
-    empleados: []
+    opcionesNavbar: ['usuarios', 'roles', 'historias']
   }
 ])
 

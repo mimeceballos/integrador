@@ -7,7 +7,7 @@ import { Users, Plus, Pencil, UserX } from 'lucide-vue-next'
 import HeaderStatsCard from '../../components/Encabezado.vue'
 import ListFooter from '../../components/Footer.vue'
 
-import { usuarios } from '../../data/usuarios'
+import { usuariosDelProyecto } from '../../data/usuarios'
 import type { Usuario } from '../../data/usuarios'
 import { sistemas } from '../../data/sistemas'
 /* PROYECTO ACTIVO */
@@ -24,6 +24,10 @@ const proyectoActivo = computed(() => {
 const nombreProyectoActivo = computed<string>(() => {
   return proyectoActivo.value?.nombre || ''
 })
+
+/* USUARIOS DEL PROYECTO ACTIVO
+ * Administrador (siempre) + los usuarios dados de alta en este proyecto */
+const usuariosProyecto = computed(() => usuariosDelProyecto(proyectoActivoId.value))
 
 /* PERMISOS Y SESIÓN */
 type PermissionCode = 1 | 2 | 3
@@ -86,7 +90,7 @@ function cancelarDesactivacion() {
         <HeaderStatsCard 
           :nombreProyecto="nombreProyectoActivo"
           :metodologia="proyectoActivo?.metodologia"
-          :totalCount="usuarios.length"
+          :totalCount="usuariosProyecto.length"
         />
         
         <RouterLink v-if="canWrite" to="/portal/usuarios/nuevo" class="new-user-btn">
@@ -112,7 +116,7 @@ function cancelarDesactivacion() {
 
         <tbody>
           <tr
-            v-for="usuario in usuarios"
+            v-for="usuario in usuariosProyecto"
             :key="usuario.id"
             :class="{ 'row-inactive': !usuario.activo }"
           >
@@ -168,7 +172,7 @@ function cancelarDesactivacion() {
             </td>
           </tr>
 
-          <tr v-if="usuarios.length === 0">
+          <tr v-if="usuariosProyecto.length === 0">
             <td colspan="6" class="empty-state">
               <div class="empty-icon">
                 <Users :size="34" />

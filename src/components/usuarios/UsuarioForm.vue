@@ -12,7 +12,7 @@ import { sistemas } from '../../data/sistemas'
 
 /* (usuarios.ts) */
 import {
-  usuarios,
+  usuariosDelProyecto,
   agregarUsuario,
   actualizarUsuario,
   obtenerUsuario
@@ -41,6 +41,9 @@ const proyectoActivoId = ref<number | null>(
 const proyectoActivo = computed(() => {
   return sistemas.value.find(s => s.id === proyectoActivoId.value)
 })
+
+// Usuarios del proyecto activo (Administrador + los dados de alta en este proyecto)
+const usuariosProyecto = computed(() => usuariosDelProyecto(proyectoActivoId.value))
 
 // Metodología del proyecto activo
 const metodologiaProyecto = computed<string>(() => {
@@ -208,7 +211,8 @@ function handleSubmit() {
   if (esEdicion.value) {
     actualizarUsuario(usuarioId.value as number, datosUsuario)
   } else {
-    agregarUsuario(datosUsuario)
+    // Al crear, el usuario queda asignado al proyecto activo
+    agregarUsuario({ ...datosUsuario, proyectoId: proyectoActivoId.value })
   }
 
   isSaving.value = false
@@ -239,7 +243,7 @@ function handleCancel() {
         <HeaderStatsCard 
           :nombreProyecto="nombreProyectoActivo"
           :metodologia="metodologiaProyecto"
-          :totalCount="usuarios.length"
+          :totalCount="usuariosProyecto.length"
         />
       </div>
 

@@ -207,14 +207,7 @@ function handleSubmit() {
   if (esEdicion.value) {
     actualizarSistema(sistemaId.value as number, datos)
   } else {
-    agregarSistema({
-      ...datos,
-      departamento: 'No especificado',
-      objetivo: 'Sin objetivo registrado.',
-      presupuesto: 0,
-      inventario: [],
-      empleados: []
-    })
+    agregarSistema(datos)
   }
   isSaving.value = false
   router.push('/portal/sistemas')

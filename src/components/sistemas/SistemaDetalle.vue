@@ -36,14 +36,6 @@ const sistema = computed(() => {
   )
 })
 
-
-/* FORMATO DE PRESUPIESTO */
-function formatearPresupuesto(valor: number) {
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN'
-  }).format(valor)
-}
 </script>
 
 <template>
@@ -146,26 +138,6 @@ function formatearPresupuesto(valor: number) {
             </span>
           </div>
 
-          <!-- DEPARTAMENTO -->
-          <div class="info-card">
-            <span class="info-label">
-              Departamento
-            </span>
-            <span class="info-value">
-              {{ sistema.departamento }}
-            </span>
-          </div>
-
-          <!-- PRESUPUESTO -->
-          <div class="info-card">
-            <span class="info-label">
-              Presupuesto
-            </span>
-            <span class="info-value budget">
-              {{ formatearPresupuesto(sistema.presupuesto) }}
-            </span>
-          </div>
-
           <!-- FECHA CREACIÓN -->
           <div class="info-card">
             <span class="info-label">
@@ -215,166 +187,7 @@ function formatearPresupuesto(valor: number) {
       </section>
 
 
-      <!-- OBJETIVO -->
-      <section class="detail-section">
-        <div class="section-title">
-          <div class="section-icon">
-            <i class="fa fa-bullseye" aria-hidden="true"></i>
-          </div>
-          <div>
-            <h2>
-              Objetivo del sistema
-            </h2>
-            <p>
-              Propósito principal del proyecto.
-            </p>
-          </div>
-        </div>
-        <div class="objective-card">
-          {{ sistema.objetivo }}
-        </div>
-      </section>
-
-
-      <!-- INVENTARIO -->
-      <section class="detail-section">
-        <div class="section-title">
-          <div class="section-icon">
-            <i class="fa fa-archive" aria-hidden="true"></i>
-          </div>
-          <div>
-            <h2>
-              Inventario
-            </h2>
-            <p>
-              Recursos y equipo relacionados con el sistema.
-            </p>
-          </div>
-        </div>
-
-        <div class="table-container">
-          <table class="detail-table">
-            <thead>
-              <tr>
-                <th>Recurso</th>
-                <th>Categoría</th>
-                <th>Cantidad</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-
-              <tr
-                v-for="(item, index) in sistema.inventario"
-                :key="index"
-              >
-                <td class="resource-name">
-                  {{ item.nombre }}
-                </td>
-                <td>
-                  {{ item.categoria }}
-                </td>
-                <td>
-                  <span class="quantity-badge">
-                    {{ item.cantidad }}
-                  </span>
-                </td>
-                <td>
-
-                  <span
-                    class="inventory-status"
-                    :class="{
-                      disponible: item.estado === 'Disponible',
-                      uso: item.estado === 'En uso'
-                    }"
-                  >
-                    {{ item.estado }}
-                  </span>
-                </td>
-              </tr>
-
-              <!-- SIN INVENTARIO -->
-              <tr
-                v-if="sistema.inventario.length === 0"
-              >
-                <td
-                  colspan="4"
-                  class="empty-table"
-                >
-                  No hay elementos de inventario registrados.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- PERSONAL INVOLUCRADO-->
-      <section class="detail-section">
-        <div class="section-title">
-          <div class="section-icon">
-            <i class="fa fa-users" aria-hidden="true"></i>
-          </div>
-
-          <div>
-            <h2>
-              Personal involucrado
-            </h2>
-            <p>
-              Empleados relacionados con el desarrollo y operación.
-            </p>
-          </div>
-        </div>
-
-        <div class="employees-grid">
-          <article
-            v-for="(empleado, index) in sistema.empleados"
-            :key="index"
-            class="employee-card"
-          >
-            <div class="employee-avatar">
-              {{ empleado.nombre.charAt(0) }}
-            </div>
-            <div class="employee-info">
-              <h3>
-                {{ empleado.nombre }}
-              </h3>
-              <span class="employee-position">
-                {{ empleado.puesto }}
-              </span>
-              <span class="employee-department">
-                {{ empleado.departamento }}
-              </span>
-              <span class="participation-badge">
-                {{ empleado.participacion }}
-              </span>
-            </div>
-          </article>
-
-          <!-- SIN PERSONAL -->
-          <div
-            v-if="sistema.empleados.length === 0"
-            class="empty-employees"
-          >
-            No hay personal registrado para este sistema.
-          </div>
-        </div>
-      </section>
-
-      <!-- PIE -->
-      <div class="detail-footer">
-        <span>
-          Información temporal para desarrollo.
-        </span>
-
-        <RouterLink
-          to="/portal/sistemas"
-          class="footer-return"
-        >
-        Volver a la lista
-        </RouterLink>
-
-      </div>
+      <
     </template>
   </section>
 </template>
@@ -389,6 +202,9 @@ function formatearPresupuesto(valor: number) {
 
 /* BOTON DE REGRESAR */
 .back-container {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
   margin-bottom: 18px;
 }
 
@@ -559,173 +375,8 @@ function formatearPresupuesto(valor: number) {
   font-weight: 700;
 }
 
-.info-value.budget {
-  color: #065f46;
-}
 
 
-/* OBJETIVO */
-.objective-card {
-  padding: 16px;
-  border-left: 4px solid #c9d8ea;
-  border-radius: 8px;
-  background: #f8fafc;
-  color: #526274;
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-
-/* TABLAS */
-.table-container {
-  width: 100%;
-  overflow-x: auto;
-  border: 1px solid #eef2f6;
-  border-radius: 10px;
-}
-
-.detail-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.detail-table thead {
-  background: #d1d0d0;
-}
-
-.detail-table th {
-  padding: 11px 12px;
-  color: #1e3a5f;
-  text-align: left;
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.detail-table td {
-  padding: 12px;
-  border-top: 1px solid #eef2f6;
-  color: #596575;
-  font-size: 12px;
-}
-
-.resource-name {
-  color: #334155 !important;
-  font-weight: 700;
-}
-
-.quantity-badge {
-  display: inline-flex;
-  min-width: 28px;
-  justify-content: center;
-  padding: 4px 7px;
-  border-radius: 5px;
-  background: #c9d8ea;
-  color: #1e3a5f;
-  font-weight: 800;
-}
-
-.inventory-status {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 5px;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.inventory-status.disponible {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.inventory-status.uso {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.empty-table {
-  padding: 25px !important;
-  text-align: center;
-  color: #8a94a1 !important;
-}
-
-
-/* EMPLEADOS */
-.employees-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
-.employee-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 11px;
-  padding: 14px;
-  border: 1px solid #eef2f6;
-  border-radius: 10px;
-  background: #fafafa;
-}
-
-.employee-avatar {
-  width: 38px;
-  height: 38px;
-  flex-shrink: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 50%;
-  background: #c9d8ea;
-  color: #1e3a5f;
-  font-size: 15px;
-  font-weight: 800;
-}
-
-.employee-info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.employee-info h3 {
-  margin: 0 0 3px;
-  color: #334155;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.employee-position {
-  color: #526274;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.employee-department {
-  margin-top: 2px;
-  color: #8a94a1;
-  font-size: 10px;
-}
-
-.participation-badge {
-  align-self: flex-start;
-  margin-top: 7px;
-  padding: 3px 7px;
-  border-radius: 5px;
-  background: #f1f5fa;
-  color: #1e3a5f;
-  font-size: 9px;
-  font-weight: 700;
-}
-
-.empty-employees {
-  grid-column: 1 / -1;
-  padding: 25px;
-  border-radius: 10px;
-  background: #f8fafc;
-  color: #8a94a1;
-  font-size: 12px;
-  text-align: center;
-}
 
 
 /* NO ENCONTRADO */
@@ -795,9 +446,6 @@ function formatearPresupuesto(valor: number) {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .employees-grid {
-    grid-template-columns: 1fr;
-  }
 
 }
 

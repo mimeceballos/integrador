@@ -18,8 +18,11 @@ export interface Usuario {
   metodologia: string
   rolMetodologia: string
   activo: boolean
-  requiereCambioPassword: boolean 
+  requiereCambioPassword: boolean
   permissions: UserPermissions
+  // Proyecto (sistema) al que pertenece el usuario.
+  // null = no está atado a un proyecto (caso del Administrador, que aparece en todos).
+  proyectoId: number | null
 }
 
 export const usuarios = ref<Usuario[]>([
@@ -33,33 +36,44 @@ export const usuarios = ref<Usuario[]>([
     rolMetodologia: 'Cliente (Customer)',
     activo: true,
     requiereCambioPassword: false,
-    permissions: { sistemas: 3, usuarios: 3, roles: 3, historias: 3 }
+    permissions: { sistemas: 3, usuarios: 3, roles: 3, historias: 3 },
+    proyectoId: null // Administrador: aparece en TODOS los proyectos
   },
   {
     id: 2,
-    email: 'usr2@gmail.com',
-    password: 'usr123',
+    email: 'usr_sistema@gmail.com',
+    password: 'sistema123',
     nombreCompleto: 'Juan Perez',
     roleName: 'Usuario del Sistema',
     metodologia: 'XP (Extreme Programming)',
     rolMetodologia: 'Programador (Developer)',
     activo: true,
     requiereCambioPassword: false,
-    permissions: { sistemas: 3, usuarios: 2, roles: 1, historias: 2 }
+    permissions: { sistemas: 3, usuarios: 2, roles: 1, historias: 2 },
+    proyectoId: 1 // Solo aparece en el proyecto #1
   },
   {
     id: 3,
-    email: 'usr3@gmail.com',
-    password: 'usr123',
+    email: 'externo@gmail.com',
+    password: 'externo123',
     nombreCompleto: 'María Perez',
     roleName: 'Externo',
     metodologia: 'XP (Extreme Programming)',
     rolMetodologia: 'Probador (Tester)',
     activo: true,
     requiereCambioPassword: false,
-    permissions: { sistemas: 2, usuarios: 2, roles: 1, historias: 1 }
+    permissions: { sistemas: 2, usuarios: 2, roles: 1, historias: 1 },
+    proyectoId: 2 // Solo aparece en el proyecto #2
   }
 ])
+
+// Devuelve los usuarios que pertenecen a un proyecto:
+// el Administrador (siempre) + los usuarios dados de alta en ese proyecto.
+export function usuariosDelProyecto(proyectoId: number | null): Usuario[] {
+  return usuarios.value.filter(
+    u => u.roleName === 'Administrador' || (proyectoId !== null && u.proyectoId === proyectoId)
+  )
+}
 
 function obtenerPermisosPorRol(roleName: string): UserPermissions {
   if (roleName === 'Administrador') {
@@ -100,6 +114,7 @@ export function agregarUsuario(nuevo: {
   password?: string
   roleName?: string
   permissions?: UserPermissions
+  proyectoId?: number | null
 }) {
   let idMayor = 0
   for (let i = 0; i < usuarios.value.length; i++) {
@@ -120,7 +135,8 @@ export function agregarUsuario(nuevo: {
     rolMetodologia: nuevo.rolMetodologia,
     activo: nuevo.activo,
     requiereCambioPassword: true, // <-- Obliga a cambiarla en el primer login
-    permissions: nuevo.permissions || obtenerPermisosPorRol(rolAsignado)
+    permissions: nuevo.permissions || obtenerPermisosPorRol(rolAsignado),
+    proyectoId: nuevo.proyectoId ?? null // proyecto donde se dio de alta
   }
 
   usuarios.value.push(usuarioParaGuardar)

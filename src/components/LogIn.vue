@@ -217,18 +217,7 @@ function fillCredentials(email: string): void {
         <h1 class="login-title">Login de Usuarios</h1>
         <p class="login-subtitle">Ingrese sus datos</p>
 
-        <div class="quick-login">
-          <button
-            v-for="user in usuarios"
-            :key="user.id"
-            type="button"
-            class="quick-login-btn"
-            @click="fillCredentials(user.email)"
-          >
-            {{ user.nombreCompleto.split(' ')[0] }} ({{ user.roleName }})
-          </button>
-        </div>
-
+    
         <!-- Campo Email -->
         <div class="field">
           <label for="email">Email</label>
@@ -488,9 +477,9 @@ function fillCredentials(email: string): void {
 }
 
 .server-error {
-  background: rgba(15, 118, 110, 0.12);
-  border: 1px solid #0f766e;
-  color: #115e59;
+  background: rgba(176, 40, 32, 0.12);
+  border: 1px solid #782318;
+  color: #AF2920;
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 14px;
@@ -536,14 +525,6 @@ function fillCredentials(email: string): void {
 .submit-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.quick-login {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-  justify-content: center;
 }
 
 .quick-login-btn {
