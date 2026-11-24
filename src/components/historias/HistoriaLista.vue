@@ -3,7 +3,7 @@
 import { ref, computed, inject } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import type { Ref } from 'vue'
-import { BookOpen, Plus, Pencil, Eye, EyeOff, RotateCcw, Trash2 } from 'lucide-vue-next'
+import { BookOpen, Plus, Pencil, Eye, EyeOff, RotateCcw, Trash2, CheckCircle2 } from 'lucide-vue-next'
 
 import HeaderStatsCard from '../../components/Encabezado.vue'
 import ListFooter from '../../components/Footer.vue'
@@ -43,6 +43,169 @@ const nombreProyectoActivo = computed<string>(() => {
   return proyectoActivo.value ? proyectoActivo.value.nombre : ''
 })
 
+/* ETAPAS DE LA HISTORIA DE USUARIO */
+// Lista fija con las 3 opciones que aparecen en los botones de etapa
+const ETAPAS_HISTORIA = ['No iniciado', 'En curso', 'Completado'] as const
+type EtapaHistoria = (typeof ETAPAS_HISTORIA)[number]
+
+// Siempre inicia en "En curso" al entrar a la vista para mostrar esas historias primero
+const filtroEtapa = ref<EtapaHistoria>('En curso')
+
+// Cambia la etapa seleccionada en el filtro superior (solo funciona en la pestaña "Activas")
+function seleccionarFiltroEtapa(etapa: EtapaHistoria) {
+  if (mostrarOcultas.value) return
+  filtroEtapa.value = etapa
+}
+
+// Guarda la historia que está pendiente de confirmar su paso de "En curso" a "Completado"
+const historiaACompletar = ref<HistoriaUsuario | null>(null)
+
+// Cuenta cuántos requerimientos de una historia aún NO están en "Completado"
+function contarRequerimientosPendientes(historia: HistoriaUsuario): number {
+  const totalReqs = historia.requerimientos.length
+  const completados = contarCompletados(historia)
+  return totalReqs - completados
+}
+
+// Indica si la historia que se va a completar tiene requerimientos pendientes por marcar
+const tieneRequerimientosSinCompletar = computed<boolean>(() => {
+  if (!historiaACompletar.value) return false
+  return contarRequerimientosPendientes(historiaACompletar.value) > 0
+})
+
+// Revisa si la historia tiene al menos un requerimiento "En curso" o "Completado"
+function tieneRequerimientosIniciados(historia: HistoriaUsuario): boolean {
+  for (let i = 0; i < historia.requerimientos.length; i++) {
+    const estatusReq = historia.requerimientos[i].estatus
+    if (estatusReq === 'En curso' || estatusReq === 'Completado') {
+      return true
+    }
+  }
+  return false
+}
+
+// Calcula o devuelve la etapa actual de una historia de usuario
+function obtenerEtapaHistoria(historia: HistoriaUsuario): EtapaHistoria {
+  const historiaConEtapa = historia as HistoriaUsuario & { etapa?: EtapaHistoria }
+
+  // Solo pasa a "Completado" si el usuario la marcó manualmente y confirmó en el modal
+  if (historiaConEtapa.etapa === 'Completado') {
+    return 'Completado'
+  }
+
+  // Si tiene requerimientos "En curso" o "Completado" (incluso todos completados), está en "En curso"
+  if (tieneRequerimientosIniciados(historia)) {
+    return 'En curso'
+  }
+
+  // Si el usuario la pasó manualmente de "No iniciado" a "En curso", conservamos "En curso"
+  if (historiaConEtapa.etapa === 'En curso') {
+    return 'En curso'
+  }
+
+  return 'No iniciado'
+}
+
+// Valida si un botón de etapa se debe bloquear para esa historia
+function etapaDeshabilitada(historia: HistoriaUsuario, etapaDestino: EtapaHistoria): boolean {
+  // Si el usuario no tiene permiso de escritura, todos los botones se deshabilitan
+  if (!canWrite.value) return true
+
+  // Si la historia está archivada/oculta, su botonera de etapas deja de funcionar
+  if (historia.oculto) return true
+
+  const etapaActual = obtenerEtapaHistoria(historia)
+
+  // Regla 3: Si la historia ya está en "Completado", ya no puede volver a "No iniciado" ni "En curso"
+  if (etapaActual === 'Completado' && etapaDestino !== 'Completado') {
+    return true
+  }
+
+  // Regla 4: Si la historia está en "No iniciado", solo puede pasar a "En curso" (no directo a "Completado")
+  if (etapaActual === 'No iniciado' && etapaDestino === 'Completado') {
+    return true
+  }
+
+  // Regla 1: No puede pasar a "No iniciado" si tiene requerimientos "En curso" o "Completado"
+  if (etapaDestino === 'No iniciado' && tieneRequerimientosIniciados(historia)) {
+    return true
+  }
+
+  return false
+}
+
+// Muestra un mensaje de ayuda al pasar el mouse sobre cada botón de etapa
+function tituloEtapa(historia: HistoriaUsuario, etapaDestino: EtapaHistoria): string {
+  if (historia.oculto) {
+    return 'No se puede cambiar la etapa de una historia archivada'
+  }
+
+  const etapaActual = obtenerEtapaHistoria(historia)
+
+  if (etapaActual === 'Completado' && etapaDestino !== 'Completado') {
+    return 'Una historia completada no puede regresar a etapas anteriores'
+  }
+
+  if (etapaActual === 'No iniciado' && etapaDestino === 'Completado') {
+    return 'Una historia en "No iniciado" debe pasar primero a "En curso"'
+  }
+
+  if (etapaDestino === 'No iniciado' && tieneRequerimientosIniciados(historia)) {
+    return 'No disponible: la historia ya tiene requerimientos en curso o completados'
+  }
+
+  return 'Cambiar etapa a ' + etapaDestino
+}
+
+// Controla qué ocurre cuando el usuario hace clic en alguno de los 3 botones de etapa
+function intentarCambiarEtapa(historia: HistoriaUsuario, nuevaEtapa: EtapaHistoria) {
+  if (etapaDeshabilitada(historia, nuevaEtapa)) return
+
+  const etapaActual = obtenerEtapaHistoria(historia)
+
+  // Si ya está en esa misma etapa, no hacemos nada
+  if (etapaActual === nuevaEtapa) return
+
+  // Regla 2: Si está en "En curso" y quiere pasar a "Completado", abrimos el modal de confirmación
+  if (etapaActual === 'En curso' && nuevaEtapa === 'Completado') {
+    historiaACompletar.value = historia
+    return
+  }
+
+  // Para otros cambios permitidos (como pasar de "No iniciado" a "En curso"), se aplica directo
+  const historiaConEtapa = historia as HistoriaUsuario & { etapa?: EtapaHistoria }
+  historiaConEtapa.etapa = nuevaEtapa
+}
+
+// Confirma el cambio de "En curso" a "Completado" desde el modal
+function ejecutarCompletarHistoria() {
+  if (!historiaACompletar.value || !canWrite.value) return
+
+  const historiaConEtapa = historiaACompletar.value as HistoriaUsuario & { etapa?: EtapaHistoria }
+  historiaConEtapa.etapa = 'Completado'
+
+  // Marcamos automáticamente como "Completado" los requerimientos que aún no lo están
+  for (let i = 0; i < historiaACompletar.value.requerimientos.length; i++) {
+    if (historiaACompletar.value.requerimientos[i].estatus !== 'Completado') {
+      historiaACompletar.value.requerimientos[i].estatus = 'Completado'
+    }
+  }
+
+  historiaACompletar.value = null
+}
+
+// Cancela el modal de confirmación de etapa
+function cancelarCompletarHistoria() {
+  historiaACompletar.value = null
+}
+
+// Devuelve la clase de color según la etapa (igual que en HistoriaForm.vue)
+function claseEtapa(etapa: EtapaHistoria): string {
+  if (etapa === 'En curso') return 'st-curso'
+  if (etapa === 'Completado') return 'st-completado'
+  return 'st-pendiente'
+}
+
 /* ACTIVAS VS OCULTAS*/
 const mostrarOcultas = ref(false)
 
@@ -50,10 +213,21 @@ const historiasFiltradas = computed(() => {
   if (!proyectoActivoId.value) return []
   return historias.value.filter(h => {
     const coincideProyecto = h.proyectoId === proyectoActivoId.value
-    if (mostrarOcultas.value) {
-      return coincideProyecto && Boolean(h.oculto) // Muestra solo las ocultas
+    if (!coincideProyecto) {
+      return false
     }
-    return coincideProyecto && !h.oculto // Muestra solo las activas
+
+    // Si estamos en "Archivadas", mostramos TODAS las historias ocultas reunidas sin filtrar por etapa
+    if (mostrarOcultas.value) {
+      return Boolean(h.oculto)
+    }
+
+    // Si estamos en "Activas", mostramos solo las no ocultas que coincidan con la etapa seleccionada
+    if (h.oculto) {
+      return false
+    }
+
+    return obtenerEtapaHistoria(h) === filtroEtapa.value
   })
 })
 
@@ -185,6 +359,29 @@ function irAEditar(id: number) {
           <span>Archivadas</span>
         </button>
       </div>
+
+      <!-- FILTRO SUPERIOR POR ETAPA (SE BLOQUEA CUANDO SE ESTÁN VIENDO LAS HISTORIAS ARCHIVADAS) -->
+      <div class="estatus-group" role="group" aria-label="Filtrar historias por etapa">
+        <button
+          v-for="etapa in ETAPAS_HISTORIA"
+          :key="etapa"
+          type="button"
+          class="estatus-btn"
+          :class="[
+            claseEtapa(etapa),
+            {
+              active: !mostrarOcultas && filtroEtapa === etapa,
+              'etapa-bloqueada': mostrarOcultas
+            }
+          ]"
+          :aria-pressed="!mostrarOcultas && filtroEtapa === etapa"
+          :disabled="mostrarOcultas"
+          :title="mostrarOcultas ? 'Vuelve a Activas para filtrar por etapa' : 'Mostrar historias en ' + etapa"
+          @click="seleccionarFiltroEtapa(etapa)"
+        >
+          {{ etapa }}
+        </button>
+      </div>
     </div>
 
     <!-- TABLA DE HISTORIAS DE USUARIO -->
@@ -197,6 +394,7 @@ function irAEditar(id: number) {
             <th class="col-center">Fecha de Captura</th>
             <th class="col-center">Capturado Por</th>
             <th class="col-center">Rol</th>
+            <th class="col-center">Etapa</th>
             <th class="col-center">Eliminar</th>
             <th class="col-center">Acciones</th>
           </tr>
@@ -232,6 +430,31 @@ function irAEditar(id: number) {
     {{ obtenerRolCapturador(historia) }}
   </span>
 </td>
+
+            <!-- COLUMNA ETAPA (EN MEDIO DE ROL Y ELIMINAR) -->
+            <td class="col-center">
+              <div class="estatus-group" role="group" :aria-label="'Etapa de ' + historia.nombreHistoria">
+                <button
+                  v-for="etapa in ETAPAS_HISTORIA"
+                  :key="etapa"
+                  type="button"
+                  class="estatus-btn"
+                  :class="[
+                    claseEtapa(etapa),
+                    {
+                      active: obtenerEtapaHistoria(historia) === etapa,
+                      'etapa-bloqueada': etapaDeshabilitada(historia, etapa) && (historia.oculto || obtenerEtapaHistoria(historia) !== etapa)
+                    }
+                  ]"
+                  :aria-pressed="obtenerEtapaHistoria(historia) === etapa"
+                  :disabled="etapaDeshabilitada(historia, etapa)"
+                  :title="tituloEtapa(historia, etapa)"
+                  @click="intentarCambiarEtapa(historia, etapa)"
+                >
+                  {{ etapa }}
+                </button>
+              </div>
+            </td>
 
             <!-- COLUMNA ELIMINAR (CON CONFIRMACIÓN) -->
             <td class="col-center">
@@ -286,16 +509,16 @@ function irAEditar(id: number) {
           </tr>
 
           <tr v-if="historiasFiltradas.length === 0">
-            <td colspan="7" class="empty-state">
+            <td colspan="8" class="empty-state">
               <div class="empty-icon">
                 <BookOpen :size="34" />
               </div>
-              <h3>{{ mostrarOcultas ? 'No hay historias ocultas' : 'No hay historias registradas' }}</h3>
+              <h3>{{ mostrarOcultas ? 'No hay historias ocultas' : 'No hay historias en "' + filtroEtapa + '"' }}</h3>
               <p>
                 {{
                   mostrarOcultas
                     ? 'No se ha ocultado ninguna historia de usuario en este proyecto.'
-                    : 'Actualmente no existen historias de usuario activas para este proyecto.'
+                    : 'Actualmente no existen historias de usuario activas en la etapa "' + filtroEtapa + '".'
                 }}
               </p>
             </td>
@@ -354,6 +577,44 @@ function irAEditar(id: number) {
           >
             <Pencil :size="14" />
             <span>Editar historia</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN (PASAR DE EN CURSO A COMPLETADO) -->
+    <div v-if="historiaACompletar" class="modal-overlay" @click.self="cancelarCompletarHistoria">
+      <div class="confirmation-modal">
+        <div class="modal-icon restore-icon">
+          <CheckCircle2 :size="24" />
+        </div>
+        <h3>Completar historia</h3>
+        <p>
+          ¿Estás seguro de que deseas pasar la historia
+          <strong>"{{ historiaACompletar.nombreHistoria }}"</strong>
+          de <strong>En curso</strong> a <strong>Completado</strong>?
+        </p>
+
+        <!-- AVISO ADICIONAL CUANDO TODAVÍA HAY REQUERIMIENTOS SIN COMPLETAR -->
+        <p v-if="tieneRequerimientosSinCompletar" class="modal-warning">
+          Esta historia aún tiene
+          <strong>{{ contarRequerimientosPendientes(historiaACompletar) }} requerimiento(s)</strong>
+          sin completar. Al confirmar, se marcarán automáticamente como completados y la historia ya no podrá regresar a "No iniciado" ni a "En curso".
+        </p>
+
+        <!-- MENSAJE NORMAL CUANDO TODOS LOS REQUERIMIENTOS YA ESTÁN COMPLETADOS -->
+        <p v-else class="modal-warning">
+          Una vez marcada como completada, la historia ya no podrá regresar a "No iniciado" ni a "En curso".
+        </p>
+
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" @click="cancelarCompletarHistoria">Cancelar</button>
+          <button
+            type="button"
+            class="confirm-action-btn restore-action-btn"
+            @click="ejecutarCompletarHistoria"
+          >
+            Completar
           </button>
         </div>
       </div>
@@ -495,10 +756,13 @@ function irAEditar(id: number) {
   transform: translateY(-1px);
 }
 
-/* BARRA DE PESTAÑAS / FILTRO DE ACTIVAS U OCULTAS */
+/* BARRA DE PESTAÑAS / FILTRO DE ACTIVAS U OCULTAS Y ETAPAS */
 .toolbar-container {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 16px;
 }
 
@@ -529,6 +793,61 @@ function irAEditar(id: number) {
   background: #ffffff;
   color: #1e3a5f;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* BOTONES DE ETAPA (NO INICIADO / EN CURSO / COMPLETADO) */
+.estatus-group {
+  display: inline-flex;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.estatus-btn {
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #64748b;
+  background: #ffffff;
+  border: none;
+  border-right: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.estatus-btn:last-child {
+  border-right: none;
+}
+
+.estatus-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.estatus-btn:disabled {
+  cursor: default;
+}
+
+.estatus-btn.etapa-bloqueada {
+  background: #f8fafc;
+  color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.estatus-btn.st-pendiente.active {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.estatus-btn.st-curso.active {
+  background: #dbe7f5;
+  color: #1e3a5f;
+}
+
+.estatus-btn.st-completado.active {
+  background: #d1fae5;
+  color: #065f46;
 }
 
 /* TABLA DE HISTORIAS */
