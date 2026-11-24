@@ -49,7 +49,7 @@ export const usuarios = ref<Usuario[]>([
     rolMetodologia: 'Programador (Developer)',
     activo: true,
     requiereCambioPassword: false,
-    permissions: { sistemas: 3, usuarios: 2, roles: 1, historias: 2 },
+    permissions: { sistemas: 3, usuarios: 2, roles: 1, historias: 3 },
     proyectoId: 1 // Solo aparece en el proyecto #1
   },
   {
@@ -62,7 +62,7 @@ export const usuarios = ref<Usuario[]>([
     rolMetodologia: 'Probador (Tester)',
     activo: true,
     requiereCambioPassword: false,
-    permissions: { sistemas: 2, usuarios: 2, roles: 1, historias: 1 },
+    permissions: { sistemas: 2, usuarios: 2, roles: 1, historias: 2 },
     proyectoId: 2 // Solo aparece en el proyecto #2
   }
 ])
@@ -134,7 +134,7 @@ export function agregarUsuario(nuevo: {
     metodologia: nuevo.metodologia,
     rolMetodologia: nuevo.rolMetodologia,
     activo: nuevo.activo,
-    requiereCambioPassword: true, // <-- Obliga a cambiarla en el primer login
+    requiereCambioPassword: true, // Obliga a cambiarla en el primer login
     permissions: nuevo.permissions || obtenerPermisosPorRol(rolAsignado),
     proyectoId: nuevo.proyectoId ?? null // proyecto donde se dio de alta
   }

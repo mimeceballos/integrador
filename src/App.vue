@@ -28,7 +28,7 @@ const route = useRoute()
 const currentUser = ref<UserProfile | null>(null)
 
 // Tiempo máximo sin actividad antes de cerrar sesión (en minutos)
-const MINUTOS_INACTIVIDAD = 2
+const MINUTOS_INACTIVIDAD = 5
 let timerInactividad: ReturnType<typeof setTimeout>
 
 function cargarUsuarioSesion() {
